@@ -33,6 +33,8 @@ Acceptance: launch Listen from a passage, hear continuous audio, lock the phone 
 
 ## P2 — Portable deployment and device experience
 
+- [ ] Review the [community self-hosting guide](#further-reading) when refining the Linux deployment and cross-format workflow; compare its Storyteller/read-aloud, shared-media, and phone-client options with this kit before adopting changes.
+
 - [ ] Reproduce a clean native Mac install and restore on a separate machine.
 - [ ] Deploy Linux Compose on a fresh host; verify containers, DNS/TLS, library discovery, phone access, and backup/restore; pin tested image digests.
 - [ ] Design Railway deployment around per-service persistent volumes and media distribution. Do not assume services can share a local filesystem.
@@ -49,3 +51,7 @@ Acceptance: launch Listen from a passage, hear continuous audio, lock the phone 
 - Prefer extending existing integrations over replacing the library apps. Review upstream licensing before modifying or redistributing plugins.
 - EPUB pagination varies across fonts, screens, and margins. Page numbers alone are not reliable cross-device anchors.
 - Handwriting recognition/OCR is a possible later feature; it is distinct from ink capture and is not yet committed scope.
+
+## Further reading
+
+- [The Ultimate Guide for EPUB & Audiobooks Self-Hosting — r/kindlejailbreak](https://www.reddit.com/r/kindlejailbreak/comments/1wt94k6/the_ultimate_guide_for_epub_audiobooks_selfhosting/) by u/Foreignwelcome2. Background on BookOrbit, BookBridge, Storyteller, Audiobookshelf, shared media storage, KOReader, and phone clients. Use it as a reference for future implementation; verify version-specific details against upstream documentation. Its Docker-oriented setup differs from this kit's native Mac installation, and Storyteller/Double Commander are not included here.
