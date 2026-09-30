@@ -16,6 +16,9 @@ Produce complete, chaptered audiobooks locally on Apple Silicon before building 
 - [ ] Generate bounded passages sequentially with resumable checkpoints and model/voice/text hashes. Retry or replace faulty passages without regenerating the whole book.
 - [ ] Compare generated speech with the source using local transcription; flag missing text, repetitions, unusual pacing, and pronunciation for listening review. Automated checks do not establish studio quality.
 - [ ] Master consistent loudness without clipping, retain lossless chapter masters, and assemble one M4B with named chapter markers and title/author/narrator metadata.
+- [ ] Add spoken title/author credits and chapter announcements. Keep sourced author notes and related reading separate from the original text; resolve same-name author ambiguity before adding a biography.
+- [ ] Offer brief original or appropriately licensed musical chapter transitions that end before speech. Preserve speech-only masters and calculate chapter markers after transitions and tempo changes.
+- [ ] Support pitch-preserving mastering pace independently of GPU synthesis, with original recordings retained for reversible adjustments. Keep player speed controls available.
 - [ ] Import the completed M4B into the audiobook library and test chapter navigation, adjustable player speed, offline playback, and resume on a phone.
 - [ ] Measure wall time, active generation time, audio duration, peak MLX memory, and output size. Estimate remaining time from the current book's measured throughput.
 - [ ] Provide one-job-at-a-time operation, configurable idle intervals, safe pause/resume, and model unloading when finished. Idle intervals reduce average load; they are not an instantaneous GPU limit or a hardware-lifespan guarantee.
