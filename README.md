@@ -253,20 +253,20 @@ A profile is a reusable group of settings that you can apply explicitly or autom
 - **Edit saved values:** Kindle Reader → **Edit actions**; adjust the relevant settings and execute the profile to check them.
 - **Capture a revised book layout:** adjust an open book, then create **New with current book settings** as **Kindle Reader v2**. Test it before replacing the old profile. Changing a book's appearance alone does not update the saved profile.
 - **Switch:** execute another profile. Disable overlapping auto-execute rules so the previous profile does not return on reopening.
-- **Rename or keep variants:** use the profile's **Rename** or **Duplicate** option. For example, keep separate **Kindle Reader — Viwoods** and **Kindle Reader — Boox** profiles.
+- **Rename or keep variants:** use the profile's **Rename** or **Duplicate** option. For example, keep separate **Kindle Reader — Device A** and **Kindle Reader — Device B** profiles.
 
 Menu labels can vary by release. These instructions follow [KOReader's Profiles plugin](https://github.com/koreader/koreader/blob/master/plugins/profiles.koplugin/main.lua). Appearance changes can shift existing EPUB handwriting; test on an unannotated book first.
 
-### Transfer from Viwoods to Boox with LocalSend
+### Transfer between two devices with LocalSend
 
 [LocalSend](https://localsend.org/) transfers files over the local network and supports Android and macOS. Install it on both Android readers through its official download links, connect both to the same home Wi-Fi, and keep the apps open. Guest-network isolation can prevent device discovery.
 
 1. **Fully exit KOReader on both readers** so settings are saved and cannot overwrite your copied files.
-2. On the Viwoods, open LocalSend → **Send → Files** and select `koreader/settings/profiles.lua`. Choose the Boox and accept the transfer there. Solid Explorer can help locate the source file.
+2. On the source device, open LocalSend → **Send → Files** and select `koreader/settings/profiles.lua`. Choose the destination device and accept the transfer there. Solid Explorer can help locate the source file.
 3. Also transfer the font files used by the profile from `koreader/fonts/`, and any required custom files from `koreader/styletweaks/`.
-4. On the Boox, install KOReader, open it once, and exit. Locate its actual data directory; on many Android installations this is `Internal Storage/koreader`, but paths and permissions can differ.
-5. Using the Boox file manager or Solid Explorer, move the received files from LocalSend's destination into the matching folders below. **Back up an existing `profiles.lua` first: replacing it replaces all saved profiles, not just Kindle Reader.**
-6. Restart KOReader, open an EPUB, and execute **Kindle Reader**. Configure the auto-execute rule again on the Boox; the trigger configuration is stored separately from `profiles.lua`.
+4. On the destination device, install KOReader, open it once, and exit. Locate its actual data directory; on many Android installations this is `Internal Storage/koreader`, but paths and permissions can differ.
+5. Using the destination device’s file manager or Solid Explorer, move the received files from LocalSend's destination into the matching folders below. **Back up an existing `profiles.lua` first: replacing it replaces all saved profiles, not just Kindle Reader.**
+6. Restart KOReader, open an EPUB, and execute **Kindle Reader**. Configure the auto-execute rule again on the destination device; the trigger configuration is stored separately from `profiles.lua`.
 
 ```text
 koreader/
@@ -280,7 +280,7 @@ koreader/
 
 There is no dedicated export button in the profile menu described here: copying `settings/profiles.lua` transfers the saved profile definitions. If that file is missing, create a named profile and exit KOReader before looking again. Re-transfer after later edits; LocalSend is a file transfer, not automatic profile synchronization.
 
-Start with the same KOReader version on both devices where possible. Screen size and density differ, so verify margins and font size on the Boox. Install compatible handwriting plugins separately and configure BookOrbit and Tailscale on that device. Avoid copying the entire settings folder just to transfer appearance: it can include private integration settings and device-specific preferences.
+Start with the same KOReader version on both devices where possible. Screen size and density differ, so verify margins and font size on the destination device. Install compatible handwriting plugins separately and configure BookOrbit and Tailscale on that device. Avoid copying the entire settings folder just to transfer appearance: it can include private integration settings and device-specific preferences.
 
 Book progress and handwriting are separate from this appearance profile. Back up the books' metadata/sidecar folders separately. Keep personal profile bundles and licensed fonts out of public GitHub uploads.
 

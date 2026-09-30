@@ -24,7 +24,7 @@ CI also runs `docker compose config --quiet` with generated disposable settings.
 - Linux container startup, permissions, TLS, DNS, library discovery and restore on a real host.
 - iPhone/Android background playback, offline downloads and network reconnection.
 - Matching EPUB/audiobook alignment and round-trip progress accuracy.
-- Viwoods EPUB handwriting positioning across page turns and reopen.
+- Android e-reader EPUB handwriting positioning across page turns and reopen.
 - Handwriting server synchronization/export and Kokoro playback: not yet implemented.
 
 Moving Linux image tags and upstream plugin versions may change behavior. Pin and record tested versions before relying on a production deployment.

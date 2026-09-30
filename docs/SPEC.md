@@ -8,7 +8,7 @@ Read an EPUB on an e-ink device, handwrite against a passage, see that note on a
 
 ## P0 — Preserve and export handwriting
 
-- [ ] Reproduce the reported displaced/small handwriting on a Viwoods AI Paper Mini using Stylus Annotations. Record KOReader/plugin versions, orientation, screen dimensions, and layout settings.
+- [ ] Reproduce the reported displaced/small handwriting on an Android e-reader using Stylus Annotations. Record KOReader/plugin versions, orientation, screen dimensions, and layout settings.
 - [ ] Fix coordinate mapping where needed; test a pen stroke at all four corners and across a paragraph. Verify persistence after page turns and reopening.
 - [ ] Design a versioned stroke format with book identity, chapter/text anchor, original layout, timestamps, and stroke coordinates. Treat reader Lua metadata as untrusted data; never execute uploaded Lua on the server.
 - [ ] Upload changed handwriting to BookOrbit with authenticated, per-user ownership checks, retry-safe IDs, offline queueing, and deletion/conflict handling.
@@ -40,7 +40,7 @@ Acceptance: launch Listen from a passage, hear continuous audio, lock the phone 
 - [ ] Design Railway deployment around per-service persistent volumes and media distribution. Do not assume services can share a local filesystem.
 - [ ] Consider a native Linux/systemd installer after establishing a tested dependency matrix.
 - [ ] Document iPhone/Android reader capabilities separately from audio clients.
-- [ ] Add a device compatibility matrix for pen latency, palm rejection, EPUB positioning, and PDF exports. Test Viwoods first; do not infer Kindle/Kobo compatibility.
+- [ ] Add a device compatibility matrix for pen latency, palm rejection, EPUB positioning, and PDF exports. Test each device independently; do not infer compatibility across platforms.
 - [ ] Add an optional plugin update check that shows versions and preserves notes before an update.
 
 ## Design constraints
