@@ -10,7 +10,7 @@ Native on Apple Silicon · Docker Compose on Linux · KOReader companion plugins
 [![Linux](https://img.shields.io/badge/Linux-Docker_Compose-2496ED?logo=docker&logoColor=white)](cloud/README.md)
 [![License](https://img.shields.io/badge/Deployment_code-MIT-22c55e)](LICENSE)
 
-[Mac setup](#-mac-quick-start) · [Linux setup](#-linux-quick-start) · [Remote access](#remote-access-with-tailscale) · [Handwriting & plugins](docs/PLUGINS.md) · [Roadmap & specification](docs/SPEC.md)
+[Mac setup](#-mac-quick-start) · [Linux setup](#-linux-quick-start) · [Remote access](#remote-access-with-tailscale) · [Handwriting & plugins](docs/PLUGINS.md) · [Reading profiles](#kindle-reader-profile-and-device-transfer) · [Roadmap & specification](docs/SPEC.md)
 
 </div>
 
@@ -228,6 +228,61 @@ For listening, choose an [Audiobookshelf-compatible client](https://www.audioboo
 Use **Stylus Annotations for EPUB handwriting** or **Ink Away for PDF annotation and notebooks**. They are optional third-party plugins, installed on the reader, not on the Mac server.
 
 Follow the [plugin guide](docs/PLUGINS.md) for downloads, folder layouts, menu paths, and backup/export limitations. Handwriting sync and a gallery of exported passages are recorded in the [specification TODO list](docs/SPEC.md).
+
+## Kindle Reader profile and device transfer
+
+**Kindle Reader** is the example profile name used here for a Kindle-like appearance, including Bookerly. It is a user-created KOReader profile, not an Amazon integration or a bundled preset. Capture your own preferred font size, margins and spacing; no personal configuration or font files are shipped in this repository.
+
+### Defaults versus profiles
+
+**Document Settings → save current settings as defaults** sets the starting appearance for newly opened books. Previously opened books can retain their saved appearance; use the document-settings option to reset their appearance to the current defaults when needed. Saving defaults does not create a named profile or `profiles.lua`.
+
+A profile is a reusable group of settings that you can apply explicitly or automatically. See the [KOReader appearance and backup guide](https://koreader.rocks/user_guide/).
+
+### Find and create a profile
+
+1. Open an EPUB and adjust its appearance, including Bookerly and embedded-font preferences.
+2. Tap the top-center, then the **crossed wrench/screwdriver icon** (Tools, usually the fourth tab). Page through the list to **Profiles**.
+3. If absent: **Tools → More tools → Plugin management → Profiles**; enable it and restart.
+4. Choose **Profiles → New with current book settings**, and name it **Kindle Reader**.
+5. Apply it with **Profiles → Kindle Reader → Execute**.
+
+### Apply automatically, update, or switch
+
+- **All EPUBs as they open:** Kindle Reader → **Auto-execute → on book opening → if book file path contains** → `.epub`. Leave the new-books-only condition off to include previously opened EPUBs. This applies on opening, not as an immediate bulk rewrite of every book.
+- **Edit saved values:** Kindle Reader → **Edit actions**; adjust the relevant settings and execute the profile to check them.
+- **Capture a revised book layout:** adjust an open book, then create **New with current book settings** as **Kindle Reader v2**. Test it before replacing the old profile. Changing a book's appearance alone does not update the saved profile.
+- **Switch:** execute another profile. Disable overlapping auto-execute rules so the previous profile does not return on reopening.
+- **Rename or keep variants:** use the profile's **Rename** or **Duplicate** option. For example, keep separate **Kindle Reader — Viwoods** and **Kindle Reader — Boox** profiles.
+
+Menu labels can vary by release. These instructions follow [KOReader's Profiles plugin](https://github.com/koreader/koreader/blob/master/plugins/profiles.koplugin/main.lua). Appearance changes can shift existing EPUB handwriting; test on an unannotated book first.
+
+### Transfer from Viwoods to Boox with LocalSend
+
+[LocalSend](https://localsend.org/) transfers files over the local network and supports Android and macOS. Install it on both Android readers through its official download links, connect both to the same home Wi-Fi, and keep the apps open. Guest-network isolation can prevent device discovery.
+
+1. **Fully exit KOReader on both readers** so settings are saved and cannot overwrite your copied files.
+2. On the Viwoods, open LocalSend → **Send → Files** and select `koreader/settings/profiles.lua`. Choose the Boox and accept the transfer there. Solid Explorer can help locate the source file.
+3. Also transfer the font files used by the profile from `koreader/fonts/`, and any required custom files from `koreader/styletweaks/`.
+4. On the Boox, install KOReader, open it once, and exit. Locate its actual data directory; on many Android installations this is `Internal Storage/koreader`, but paths and permissions can differ.
+5. Using the Boox file manager or Solid Explorer, move the received files from LocalSend's destination into the matching folders below. **Back up an existing `profiles.lua` first: replacing it replaces all saved profiles, not just Kindle Reader.**
+6. Restart KOReader, open an EPUB, and execute **Kindle Reader**. Configure the auto-execute rule again on the Boox; the trigger configuration is stored separately from `profiles.lua`.
+
+```text
+koreader/
+├── settings/
+│   └── profiles.lua
+├── fonts/
+│   └── your Bookerly font files
+└── styletweaks/
+    └── any custom tweaks you use
+```
+
+There is no dedicated export button in the profile menu described here: copying `settings/profiles.lua` transfers the saved profile definitions. If that file is missing, create a named profile and exit KOReader before looking again. Re-transfer after later edits; LocalSend is a file transfer, not automatic profile synchronization.
+
+Start with the same KOReader version on both devices where possible. Screen size and density differ, so verify margins and font size on the Boox. Install compatible handwriting plugins separately and configure BookOrbit and Tailscale on that device. Avoid copying the entire settings folder just to transfer appearance: it can include private integration settings and device-specific preferences.
+
+Book progress and handwriting are separate from this appearance profile. Back up the books' metadata/sidecar folders separately. Keep personal profile bundles and licensed fonts out of public GitHub uploads.
 
 ## Maintain your library
 
