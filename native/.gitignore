@@ -1,0 +1,10 @@
+config/
+data/
+logs/
+library/
+dock/
+backups/
+cache/
+venv/
+tools/
+sources/

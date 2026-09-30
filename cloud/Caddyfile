@@ -1,0 +1,12 @@
+{
+    email {$ADMIN_EMAIL}
+}
+{$BOOKS_DOMAIN} {
+    reverse_proxy bookorbit:3000
+}
+{$AUDIO_DOMAIN} {
+    reverse_proxy audiobookshelf:80
+}
+{$BRIDGE_DOMAIN} {
+    reverse_proxy bookbridge:5757
+}

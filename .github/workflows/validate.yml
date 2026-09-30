@@ -1,0 +1,20 @@
+name: Validate deployment kit
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: python3 scripts/check_public_tree.py
+      - run: python3 scripts/validate.py
+      - name: Validate Linux Compose without starting services
+        shell: bash
+        run: |
+          staging=$(mktemp -d)
+          cp cloud/prepare.py cloud/compose.yaml cloud/Caddyfile "$staging/"
+          python3 "$staging/prepare.py" --domain example.com --email reader@example.com
+          docker compose --project-directory "$staging" -f "$staging/compose.yaml" config --quiet
