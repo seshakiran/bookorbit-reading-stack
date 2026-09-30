@@ -10,7 +10,7 @@ Native on Apple Silicon · Docker Compose on Linux · KOReader companion plugins
 [![Linux](https://img.shields.io/badge/Linux-Docker_Compose-2496ED?logo=docker&logoColor=white)](cloud/README.md)
 [![License](https://img.shields.io/badge/Deployment_code-MIT-22c55e)](LICENSE)
 
-[Mac setup](#-mac-quick-start) · [Linux setup](#-linux-quick-start) · [Handwriting & plugins](docs/PLUGINS.md) · [Roadmap & specification](docs/SPEC.md)
+[Mac setup](#-mac-quick-start) · [Linux setup](#-linux-quick-start) · [Remote access](#remote-access-with-tailscale) · [Handwriting & plugins](docs/PLUGINS.md) · [Roadmap & specification](docs/SPEC.md)
 
 </div>
 
@@ -33,16 +33,71 @@ This is an **independent deployment kit** for [BookOrbit](https://github.com/boo
 | Handwriting in BookOrbit or on iPhone | **Planned**; strokes currently stay on the reader |
 | On-demand Kokoro narration | **Planned**; no TTS engine is installed by this kit |
 
+## Architecture
+
+The same application stack has two deployment choices: native processes on a Mac, or containers on Linux. The diagrams describe supported connections; they do not imply that every integration is configured automatically.
+
+```mermaid
+flowchart TB
+    subgraph Clients[Reading and listening devices]
+        K["KOReader + BookOrbit plugin<br/>Android and supported e-readers"]
+        W["BookOrbit web or compatible app<br/>Mac, phone, tablet"]
+        P["Audiobookshelf-compatible audio client<br/>iPhone or Android"]
+        INK["Stylus Annotations: EPUB/PDF ink<br/>Ink Away: PDF and notebooks"]
+        LOCAL["Reader-local notes and exports<br/>Back up separately"]
+        INK --> LOCAL
+        K --- INK
+    end
+    subgraph Services[Application services]
+        B["BookOrbit<br/>Library, reading, progress, text annotations"]
+        A["Audiobookshelf<br/>Audio streaming and downloads"]
+        R["BookBridge<br/>Paired-book alignment and progress integration"]
+        DB[("PostgreSQL + pgvector<br/>BookOrbit database")]
+        STATE[("Per-service private state<br/>Accounts, settings and metadata")]
+        MEDIA[("Shared media folders<br/>EPUB, M4B, MP3 and comics")]
+        B <--> DB
+        B --> STATE
+        A --> STATE
+        R --> STATE
+        MEDIA --> B
+        MEDIA --> A
+        MEDIA --> R
+        R <-->|Configured service APIs| B
+        R <-->|Configured service APIs| A
+    end
+    K <-->|Download, progress, text annotations| B
+    W <-->|Read and manage| B
+    P <-->|Audio and playback progress| A
+    subgraph Future[Additional workflows not bundled in this release]
+        TTS["Local MLX audiobook studio prototype<br/>Directed narration, review and M4B mastering"]
+        ST["Storyteller evaluation<br/>Align existing EPUB + audio into read-aloud EPUB"]
+        INKSYNC["Planned handwriting upload<br/>Gallery and passage export"]
+    end
+    TTS -.->|Proposed approved audio import| MEDIA
+    MEDIA -.->|Optional processing| ST
+    LOCAL -.->|Not implemented| INKSYNC
+    INKSYNC -.-> B
+```
+
+Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. The local studio has been auditioned separately; its code and model weights are not included in this deployment kit. On-demand Kokoro and full-book studio production remain roadmap work.
+
 ```mermaid
 flowchart LR
-    K[KOReader] <-->|Progress and text annotations| B[BookOrbit]
-    L[(Shared book folders)] --> B
-    L --> A[Audiobookshelf]
-    A <--> P[Phone audio client]
-    B <--> R[BookBridge]
-    A <--> R
-    K --> H[Handwriting stored on reader]
+    subgraph Native[Option A: native Apple Silicon Mac]
+        LOGIN["macOS login + launchd"] --> MAC["Native BookOrbit, Audiobookshelf,<br/>BookBridge and PostgreSQL"]
+        TSM["Tailscale on Mac"] --> MAC
+        DISK["native/library + private config/data"] --- MAC
+    end
+    HOME["Home device browser or KOReader"] -->|Mac LAN address and service port| MAC
+    REMOTE["Phone or Android reader<br/>Tailscale installed and connected"] <-->|Encrypted tailnet connection| TSM
+    subgraph Linux[Option B: Linux server]
+        CADDY["Caddy HTTPS<br/>books / audio / bridge subdomains"] --> DOCKER["Docker Compose application services<br/>PostgreSQL on internal network"]
+        VOL["Persistent media and service storage"] --- DOCKER
+    end
+    WEB["Browser or compatible client"] -->|HTTPS with application login| CADDY
 ```
+
+Tailscale supplies private network access, not application login or book synchronization. The native HTTP endpoints are reached through the encrypted tailnet when remote. Linux's public HTTPS deployment is a separate option and still requires destination testing.
 
 > **Validation:** Native services and server-side audio requests were exercised on the original Apple Silicon installation. A fresh-machine install has not yet been independently reproduced. Linux Compose has static validation only. Phone lock-screen playback, audiobook alignment, and device-specific pen behavior need real-device testing. See [validation](docs/VALIDATION.md).
 
@@ -78,7 +133,56 @@ Use your own email. Run automated onboarding **before** manually creating accoun
 | Audiobookshelf | http://localhost:13378/audiobookshelf |
 | BookBridge | http://localhost:5757 |
 
-For a phone or reader, use your Mac's LAN address instead of `localhost`. Set BookOrbit's `APP_URL` in `native/config/bookorbit.json` to a device-reachable address and restart BookOrbit if generated links point to localhost. Use a private VPN such as [Tailscale](https://tailscale.com) away from home. Do not port-forward these native HTTP services directly to the internet.
+### Reach the Mac from another device
+
+`localhost` always means the device you are currently using. On your phone or reader, it does **not** mean the Mac. Use these templates, replacing the uppercase placeholders with your own addresses; no real device addresses are published here.
+
+| Connection | BookOrbit | Audiobookshelf |
+|---|---|---|
+| On the server Mac | `http://localhost:3000` | `http://localhost:13378/audiobookshelf` |
+| Home network | `http://MAC_LAN_ADDRESS:3000` | `http://MAC_LAN_ADDRESS:13378/audiobookshelf` |
+| Private remote access | `http://MAC_TAILSCALE_ADDRESS:3000` | `http://MAC_TAILSCALE_ADDRESS:13378/audiobookshelf` |
+
+Find the LAN address under **macOS System Settings → Network → active connection → Details → TCP/IP**. A router DHCP reservation can keep it stable. Devices on guest Wi-Fi may be isolated even when connected to the same router.
+
+### Remote access with Tailscale
+
+1. Install and connect [Tailscale on the Mac](https://tailscale.com/docs/install/mac).
+2. Install Tailscale on **each client** that needs remote access: [Android](https://tailscale.com/docs/install/android) for a compatible reader, or the official iOS app for an iPhone. Sign in to the same tailnet and approve the client VPN prompt. Installing it only on the Mac is insufficient.
+3. Find the Mac in Tailscale's device list and copy its Tailscale address. Keep it private. Tailnet policy must permit the client to reach the chosen service port.
+4. On the client, first open `http://MAC_TAILSCALE_ADDRESS:3000` in its browser. Once the login page opens, configure the reader/app with that same base URL. Keep `http://` for this native configuration; enabling Tailscale does not automatically configure HTTPS on port 3000.
+5. In KOReader: **open a book → top-center menu → crossed-tools tab → BookOrbit → Account & setup → BookOrbit server address**. Enter `http://MAC_TAILSCALE_ADDRESS:3000`. Keep your existing KOReader integration credentials. They are managed in BookOrbit's KOReader settings and may differ from your normal web login.
+6. Use the audio address above and your **Audiobookshelf** credentials in the phone's audiobook client. Each service has its own account.
+
+The Tailscale address can be used at home and away as long as both ends stay connected. For this connection you do not need an exit node, router port forwarding, Tailscale Funnel, or a public domain. See [Tailscale's remote media guide](https://tailscale.com/docs/use-cases/personal-or-at-home-use/access-nas-media-file-servers?tab=android).
+
+These Android instructions do not imply that stock Kindle/Kobo devices can install the Android Tailscale app. Devices without a supported Tailscale client need a separately planned network gateway or HTTPS access path.
+
+### Generated links and Mac availability
+
+Edit **only** `APP_URL` in the private `native/config/bookorbit.json` to the base address that your intended clients can reach, such as `http://MAC_TAILSCALE_ADDRESS:3000`. Preserve all existing secrets and other settings. Then, from `native/`:
+
+```sh
+python3.11 manage.py stop bookorbit
+python3.11 manage.py start bookorbit
+python3.11 manage.py status
+```
+
+`APP_URL` affects generated links; it does not install Tailscale, change firewall rules, or update an already-provisioned reader's server address. Keep Tailscale enabled for clients using that address. Personalized KOReader plugin downloads can contain credentials and must never be shared publicly.
+
+Keep the Mac **powered, awake, online, and logged in**. This installer uses per-user LaunchAgents: after a restart, log into macOS before expecting the applications to serve books. You can lock the screen afterward. The optional `python3.11 maintenance.py` enables idle-sleep prevention and nightly settings backups; it cannot keep a shut-down Mac online or bypass FileVault login. See [Mac maintenance](native/README.md#service-controls) and [Tailscale session behavior](https://tailscale.com/docs/how-to/run-unattended).
+
+### If KOReader cannot connect
+
+| What happens | Next check |
+|---|---|
+| Mac cannot open `http://localhost:3000` | Run `manage.py status` and `manage.py logs bookorbit` from `native/`. Check PostgreSQL too. |
+| Mac works, reader browser cannot open the LAN URL | Verify the current Mac address, reader Wi-Fi, guest/client isolation, and firewall permission for the service. Do not disable the firewall as a default fix. |
+| Tailscale URL fails in the reader browser | Confirm both clients show connected, the Mac is awake, the tailnet is the same, access policy permits the port, and another VPN is not replacing Tailscale. |
+| Reader browser works, KOReader fails | Check the plugin's exact server URL, scheme and port; then capture its error. Browser success does not verify plugin authentication. |
+| HTTP 401 or a login failure | Check the integration credentials; resetting the network will not fix an authentication error. |
+
+A successful request on the Mac proves the server responds there. It does not prove another device can reach it. Test from the failing device before changing server settings. Do not port-forward the native HTTP services directly to the internet.
 
 ## 🐧 Linux quick start
 
@@ -142,7 +246,7 @@ Mac settings backups exclude books; back up the media folder separately. Linux `
 ```text
 native/       Native Apple Silicon installer and service helpers
 cloud/        Linux Compose stack with Caddy HTTPS
-docs/        Plugin guide, implementation specification, validation
+docs/         Plugin guide, implementation specification, validation
 scripts/      Public-tree checks and deployment smoke tests
 ```
 

@@ -24,6 +24,14 @@ The automated setup creates watched BookOrbit and Audiobookshelf libraries. For 
 
 No books or audio are included. Server-side playback was previously tested with generated sample audio.
 
+## Access from readers and phones
+
+Follow the main README's [Mac network and Tailscale instructions](../README.md#reach-the-mac-from-another-device) for address templates, KOReader menu paths and troubleshooting. Replace placeholders locally; never publish your device addresses or personalized plugin packages.
+
+Tailscale must be installed and connected on both the Mac and each supported client. Use the Mac's Tailscale address with the service port, and retain the appropriate application credentials. `localhost` works only on the server itself. Set `APP_URL` in private `config/bookorbit.json` to a reachable base URL and restart BookOrbit when changing it; update the KOReader plugin address separately.
+
+Keep the Mac awake, online and logged in. The services start after user login, not before FileVault unlock. The optional maintenance helper prevents idle sleep during that session. No router port forwarding is required for tailnet access.
+
 ## Listening while walking
 
 - iPhone: [Prologue](https://prologue.audio/) supports Audiobookshelf, background playback and offline downloads. Check its current in-app pricing for the features you want.
