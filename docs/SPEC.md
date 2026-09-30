@@ -1,12 +1,29 @@
 # Product specification & TODO list
 
-Status: proposed work, not implemented by this deployment kit.
+Status: roadmap, not features delivered by this deployment kit. Local voice auditions exist; full-book production is the current experimental priority.
 
 ## Goal
 
 Read an EPUB on an e-ink device, handwrite against a passage, see that note on a phone, and switch to natural-sounding generated audio from the current text position. Keep ownership of the library and support native Mac hosting plus Linux deployment.
 
-## P0 — Preserve and export handwriting
+## P0 — Local audiobook production
+
+Produce complete, chaptered audiobooks locally on Apple Silicon before building on-demand listening. Use the selected **Warm Storyteller** original synthetic voice as the starting narrator: conversational, expressive, moderate in pace, and restrained in drama.
+
+- [ ] Extract EPUB text in reading order, including chapters inside a single HTML file. Review headings, front matter, scientific notation, pronunciation, and duplicate chapter labels before narration.
+- [ ] Preserve a reusable voice reference so chapter-to-chapter identity stays consistent. Audition a new book before its full run; do not treat a repeated voice description as a fixed voice identity.
+- [ ] Set genre and scene context separately from spoken text where the backend supports direction. Never narrate performance instructions. Document when reference-conditioned generation lacks instruction control.
+- [ ] Generate bounded passages sequentially with resumable checkpoints and model/voice/text hashes. Retry or replace faulty passages without regenerating the whole book.
+- [ ] Compare generated speech with the source using local transcription; flag missing text, repetitions, unusual pacing, and pronunciation for listening review. Automated checks do not establish studio quality.
+- [ ] Master consistent loudness without clipping, retain lossless chapter masters, and assemble one M4B with named chapter markers and title/author/narrator metadata.
+- [ ] Import the completed M4B into the audiobook library and test chapter navigation, adjustable player speed, offline playback, and resume on a phone.
+- [ ] Measure wall time, active generation time, audio duration, peak MLX memory, and output size. Estimate remaining time from the current book's measured throughput.
+- [ ] Provide one-job-at-a-time operation, configurable idle intervals, safe pause/resume, and model unloading when finished. Idle intervals reduce average load; they are not an instantaneous GPU limit or a hardware-lifespan guarantee.
+- [ ] Package the experimental studio with reproducible setup instructions after the first complete-book test. Models, source books, generated recordings, personal configuration, and credentials remain outside the public repository.
+
+Acceptance: convert a locally supplied EPUB into a complete, playable M4B with correct chapter boundaries, no detected missing passages, and reviewed sample passages from across the book. Resume an interrupted run without overwriting approved audio. Publish measured costs and known quality limits, not a promise of human-narrator equivalence.
+
+## P1 — Preserve and export handwriting
 
 - [ ] Reproduce the reported displaced/small handwriting on an Android e-reader using Stylus Annotations. Record KOReader/plugin versions, orientation, screen dimensions, and layout settings.
 - [ ] Fix coordinate mapping where needed; test a pen stroke at all four corners and across a paragraph. Verify persistence after page turns and reopening.
@@ -19,7 +36,7 @@ Read an EPUB on an e-ink device, handwrite against a passage, see that note on a
 
 Acceptance: write on an EPUB, close it, sync, and see the same passage and handwriting on a phone. Export it and verify that no stroke is clipped or displaced. Reconnect after offline edits without duplicates or lost deletions. Confirm another user cannot fetch the notes.
 
-## P1 — On-demand Kokoro listening
+## P2 — On-demand Kokoro listening
 
 - [ ] Evaluate native Kokoro through MLX Audio on Apple Silicon; compare voices before choosing defaults. Provide a separate CPU-capable Linux backend path.
 - [ ] Connect through BookOrbit's existing OpenAI-compatible TTS interface where practical. Check response formats, voice discovery, and caption/timing support; do not assume all compatible endpoints supply timestamps.
@@ -31,7 +48,7 @@ Acceptance: write on an EPUB, close it, sync, and see the same passage and handw
 
 Acceptance: launch Listen from a passage, hear continuous audio, lock the phone for a walk, and reopen KOReader near the last spoken passage. Download a chapter and play it in airplane mode. Record measured performance rather than promising untested latency.
 
-## P2 — Portable deployment and device experience
+## P3 — Portable deployment and device experience
 
 - [ ] Review the [community self-hosting guide](#further-reading) when refining the Linux deployment and cross-format workflow; compare its Storyteller/read-aloud, shared-media, and phone-client options with this kit before adopting changes.
 
@@ -42,6 +59,14 @@ Acceptance: launch Listen from a passage, hear continuous audio, lock the phone 
 - [ ] Document iPhone/Android reader capabilities separately from audio clients.
 - [ ] Add a device compatibility matrix for pen latency, palm rejection, EPUB positioning, and PDF exports. Test each device independently; do not infer compatibility across platforms.
 - [ ] Add an optional plugin update check that shows versions and preserves notes before an update.
+
+## Deferred — Easier reading-profile transfer
+
+Manual LocalSend/file-manager transfer remains documented, but reducing its friction is lower priority than audiobook production.
+
+- [ ] Design an optional export/import bundle for a named KOReader profile such as **Kindle Reader**, using generic source/destination devices.
+- [ ] Preview changes, back up existing settings, and merge a selected profile without replacing unrelated profiles. Handle font dependencies and device-specific adjustments explicitly.
+- [ ] Exclude credentials, progress, and handwriting from appearance bundles; do not redistribute licensed font files without permission.
 
 ## Design constraints
 

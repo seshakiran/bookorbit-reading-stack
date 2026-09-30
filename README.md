@@ -79,7 +79,7 @@ flowchart TB
     INKSYNC -.-> B
 ```
 
-Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. The local studio has been auditioned separately; its code and model weights are not included in this deployment kit. On-demand Kokoro and full-book studio production remain roadmap work.
+Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. The local studio has been auditioned separately; its code and model weights are not included in this deployment kit. Full-book studio production is the current experimental priority; on-demand Kokoro and easier profile transfer follow later. See the [production specification](docs/SPEC.md#p0--local-audiobook-production) for the chapter-by-chapter workflow and acceptance checks.
 
 ```mermaid
 flowchart LR
