@@ -16,4 +16,9 @@ This repository supplies deployment helpers and documentation. It downloads appl
 
 Native app revisions are recorded in `native/versions.json`. Python dependencies are in `native/requirements.lock.txt`; dependencies retain their respective licenses. Container image tags are configurable in the generated Linux `.env`.
 
-Download plugins from their upstream maintainers. Check the applicable licenses before forking or redistributing them. No proprietary fonts, book covers, books, commercial recordings, or screenshots of a personal library are shipped here. Product names are used to identify integrations and do not imply endorsement.
+Download plugins from their upstream maintainers. Check the applicable licenses before forking or redistributing them. No proprietary fonts, book covers, full books, commercial audiobook recordings, or screenshots of a personal library are shipped here. Product names are used to identify integrations and do not imply endorsement.
+
+
+## Narration demonstration
+
+`assets/audio/marvin-reading-handoff-sample.mp3` is an approximately two-minute AI-narrated excerpt from *History of Physics* by Jordan Maxwell, with original synthetic music and added narrator commentary. The underlying book text retains its author/rightsholder copyright; the repository's MIT license covers deployment code and does not relicense that text. The sample is not a commercial audiobook recording or a public-figure voice clone. Personal introduction audio, credentials, server addresses and the full audiobook are excluded.

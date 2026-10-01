@@ -2,6 +2,7 @@
 """Check public source paths and common credential shapes without printing values."""
 from pathlib import Path
 import re
+import hashlib
 import subprocess
 import sys
 
@@ -9,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 allowed = {
     'README.md', 'LICENSE', 'THIRD_PARTY.md', 'CONTRIBUTING.md', '.gitignore',
     '.github/workflows/validate.yml',
+    'assets/audio/marvin-reading-handoff-sample.mp3',
     *('docs/' + n for n in ['SPEC.md', 'PLUGINS.md', 'VALIDATION.md']),
     *('scripts/' + n for n in ['check_public_tree.py', 'validate.py']),
     *('native/' + n for n in ['README.md', 'install.sh', 'configure.py', 'run.py',
@@ -17,6 +19,7 @@ allowed = {
     *('cloud/' + n for n in ['README.md', 'compose.yaml', 'Caddyfile',
         'prepare.py', 'deploy.sh', 'backup.sh', '.gitignore']),
 }
+reviewed_audio = {'assets/audio/marvin-reading-handoff-sample.mp3': 'b7c70e14111097f5b3e791582c7e7eac46569655c9cb09bf7bf52af35fcd8664'}
 patterns = [
     r'gh[pousr]_[A-Za-z0-9]{30,}', r'github_pat_[A-Za-z0-9_]{30,}',
     r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',
@@ -39,6 +42,11 @@ for name in names:
         continue
     if path.is_symlink():
         errors.append(f'{name}: symlinks are not allowed')
+        continue
+    if name in reviewed_audio:
+        data = path.read_bytes()
+        if len(data) > 5_000_000 or hashlib.sha256(data).hexdigest() != reviewed_audio[name]:
+            errors.append(f'{name}: public audio differs from the reviewed asset')
         continue
     content = path.read_text()
     if any(re.search(pattern, content) for pattern in patterns):

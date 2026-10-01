@@ -1,6 +1,6 @@
 # Product specification & TODO list
 
-Status: roadmap, not features delivered by this deployment kit. Local voice auditions exist; full-book production is the current experimental priority.
+Status: roadmap, not features delivered by this deployment kit. A local full-book experiment, a public sample, and server-side audio-to-EPUB handoff have been exercised. The studio is not bundled; device round-trip validation and reproducible studio packaging remain outstanding.
 
 ## Goal
 

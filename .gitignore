@@ -30,3 +30,6 @@ native/tools/
 native/sources/
 cloud/storage/
 cloud/backups/
+
+# Explicitly reviewed public demonstration only; other audio stays ignored.
+!assets/audio/marvin-reading-handoff-sample.mp3

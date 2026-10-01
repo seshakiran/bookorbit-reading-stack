@@ -4,7 +4,11 @@
 
 - Native BookOrbit, Audiobookshelf, BookBridge and PostgreSQL startup.
 - Account setup and BookBridge service connection checks.
-- Shared library import of an EPUB.
+- Shared library import of an EPUB and a completed chaptered M4B.
+- Local full-book generation experiment: about 3 hours 4 minutes of audio produced in about 2 hours 33 minutes, including configured idle intervals and checks; peak MLX memory about 14.2 GB. The studio is not bundled. These measurements are specific to the originating installation.
+- BookBridge pairing of an Audiobookshelf audiobook with a BookOrbit EPUB, transcription/alignment, and active mapping.
+- Real listening progress transferred into BookOrbit and a retrievable KoSync text locator; KoSync login verified locally and over Tailscale.
+- Prologue connection/playback reported working by the user. A full phone-to-reader-to-phone test has not yet been observed.
 - Audiobookshelf test audio session, partial-content seek/download responses and progress requests.
 - Native backup generation and launchd maintenance registration.
 
@@ -23,7 +27,7 @@ CI also runs `docker compose config --quiet` with generated disposable settings.
 - Clean install and full restore on a separate Mac.
 - Linux container startup, permissions, TLS, DNS, library discovery and restore on a real host.
 - iPhone/Android background playback, offline downloads and network reconnection.
-- Matching EPUB/audiobook alignment and round-trip progress accuracy.
+- Reader-device round-trip progress accuracy, including before/after narrator commentary and music. Server-side alignment alone does not establish exact device handoff.
 - Android e-reader EPUB handwriting positioning across page turns and reopen.
 - Handwriting server synchronization/export and Kokoro playback: not yet implemented.
 

@@ -10,7 +10,7 @@ Native on Apple Silicon · Docker Compose on Linux · KOReader companion plugins
 [![Linux](https://img.shields.io/badge/Linux-Docker_Compose-2496ED?logo=docker&logoColor=white)](cloud/README.md)
 [![License](https://img.shields.io/badge/Deployment_code-MIT-22c55e)](LICENSE)
 
-[Mac setup](#-mac-quick-start) · [Linux setup](#-linux-quick-start) · [Remote access](#remote-access-with-tailscale) · [Handwriting & plugins](docs/PLUGINS.md) · [Reading profiles](#kindle-reader-profile-and-device-transfer) · [Roadmap & specification](docs/SPEC.md)
+[Listen to the demo](#listen-to-the-sample) · [Walk-and-read guide](#read--walk-and-listen--keep-reading) · [Mac setup](#-mac-quick-start) · [Linux setup](#-linux-quick-start) · [Remote access](#remote-access-with-tailscale) · [Handwriting & plugins](docs/PLUGINS.md) · [Reading profiles](#kindle-reader-profile-and-device-transfer) · [Roadmap & specification](docs/SPEC.md)
 
 </div>
 
@@ -18,7 +18,15 @@ Native on Apple Silicon · Docker Compose on Linux · KOReader companion plugins
 
 Bring an ebook library, audiobook server, and reading integrations together. Run native services on a Mac Mini without a Linux VM, or host the stack on a Linux server with persistent storage and HTTPS.
 
-This is an **independent deployment kit** for [BookOrbit](https://github.com/bookorbit/bookorbit), [Audiobookshelf](https://github.com/advplyr/audiobookshelf), and [BookBridge](https://github.com/cporcellijr/bookbridge). It is not an official distribution of those projects. Their source code, books, proprietary fonts, and personalized plugins are not bundled.
+This is an **independent deployment kit** for [BookOrbit](https://github.com/bookorbit/bookorbit), [Audiobookshelf](https://github.com/advplyr/audiobookshelf), and [BookBridge](https://github.com/cporcellijr/bookbridge). It is not an official distribution of those projects. Their source code, full books, proprietary fonts, and personalized plugins are not bundled. A short narrated demonstration excerpt is included below.
+
+## Listen to the sample
+
+[▶ Listen to the two-minute Marvin sample](https://raw.githubusercontent.com/seshakiran/bookorbit-reading-stack/main/assets/audio/marvin-reading-handoff-sample.mp3) · [View/download the MP3](assets/audio/marvin-reading-handoff-sample.mp3)
+
+An original synthetic narrator reads an excerpt from *History of Physics* by Jordan Maxwell, with a brisk six-second musical cue and a short, clearly separated reflection. Soft beeps identify the commentary; the book continues after a complete paragraph. The sample demonstrates narration and transitions, not a recording of a device handoff. Your browser may play the MP3 directly or download it.
+
+The full recording and the experimental MLX studio are not bundled. See [attribution and sample scope](THIRD_PARTY.md). No account or server is needed to hear the sample.
 
 ## What you get
 
@@ -40,9 +48,9 @@ The same application stack has two deployment choices: native processes on a Mac
 ```mermaid
 flowchart TB
     subgraph Clients[Reading and listening devices]
-        K["KOReader + BookOrbit plugin<br/>Android and supported e-readers"]
+        K["KOReader + Progress sync<br/>Optional BookOrbit / Bridge Sync plugins"]
         W["BookOrbit web or compatible app<br/>Mac, phone, tablet"]
-        P["Audiobookshelf-compatible audio client<br/>iPhone or Android"]
+        P["Prologue on iPhone<br/>or another Audiobookshelf client"]
         INK["Stylus Annotations: EPUB/PDF ink<br/>Ink Away: PDF and notebooks"]
         LOCAL["Reader-local notes and exports<br/>Back up separately"]
         INK --> LOCAL
@@ -65,7 +73,8 @@ flowchart TB
         R <-->|Configured service APIs| B
         R <-->|Configured service APIs| A
     end
-    K <-->|Download, progress, text annotations| B
+    K <-->|Library and supported annotations| B
+    K <-->|KoSync text location, configured per user| R
     W <-->|Read and manage| B
     P <-->|Audio and playback progress| A
     subgraph Future[Additional workflows not bundled in this release]
@@ -73,13 +82,13 @@ flowchart TB
         ST["Storyteller evaluation<br/>Align existing EPUB + audio into read-aloud EPUB"]
         INKSYNC["Planned handwriting upload<br/>Gallery and passage export"]
     end
-    TTS -.->|Proposed approved audio import| MEDIA
+    TTS -.->|Experimental completed M4B import| MEDIA
     MEDIA -.->|Optional processing| ST
     LOCAL -.->|Not implemented| INKSYNC
     INKSYNC -.-> B
 ```
 
-Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. The local studio has been auditioned separately; its code and model weights are not included in this deployment kit. Full-book studio production is the current experimental priority; on-demand Kokoro and easier profile transfer follow later. See the [production specification](docs/SPEC.md#p0--local-audiobook-production) for the chapter-by-chapter workflow and acceptance checks.
+Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. A local MLX experiment produced a full chaptered M4B and the public sample above; its studio code and model weights are not included in this deployment kit. BookBridge pairing, alignment and server-side progress transfer were exercised separately. On-demand Kokoro and easier profile transfer remain future work. See the [production specification](docs/SPEC.md#p0--local-audiobook-production) for the chapter-by-chapter workflow and acceptance checks.
 
 ```mermaid
 flowchart LR
@@ -99,7 +108,7 @@ flowchart LR
 
 Tailscale supplies private network access, not application login or book synchronization. The native HTTP endpoints are reached through the encrypted tailnet when remote. Linux's public HTTPS deployment is a separate option and still requires destination testing.
 
-> **Validation:** Native services and server-side audio requests were exercised on the original Apple Silicon installation. A fresh-machine install has not yet been independently reproduced. Linux Compose has static validation only. Phone lock-screen playback, audiobook alignment, and device-specific pen behavior need real-device testing. See [validation](docs/VALIDATION.md).
+> **Validation:** Native services and server-side audio requests were exercised on the original Apple Silicon installation. A fresh-machine install has not yet been independently reproduced. Linux Compose has static validation only. The originating installation completed audiobook alignment and server-side handoff, and Prologue connectivity was reported working. Phone offline/lock-screen behavior and the full e-reader round trip still need device testing. See [validation](docs/VALIDATION.md).
 
 ## 🍎 Mac quick start
 
@@ -221,7 +230,137 @@ books/
 
 Reading text does not require BookBridge alignment. Switching between a narrated audiobook and an EPUB does: connect and pair the editions before expecting cross-format progress to work.
 
-For listening, choose an [Audiobookshelf-compatible client](https://www.audiobookshelf.org/). [Prologue](https://prologue.audio/) is an iPhone option; check current compatibility and pricing. Download audio before a walk for offline use. KOReader itself has no iOS app; an iPhone reading client is a separate choice.
+## Read → walk and listen → keep reading
+
+BookOrbit is the ebook library; Audiobookshelf is the audio server; **Prologue** is an iPhone listening client; **BookBridge** translates the listening position into an EPUB location; **KOReader** receives that location on the e-reader. A book appearing in both libraries does not automatically connect its progress.
+
+```mermaid
+sequenceDiagram
+    participant Phone as Prologue on iPhone
+    participant ABS as Audiobookshelf
+    participant Bridge as BookBridge
+    participant BO as BookOrbit
+    participant Reader as KOReader
+    Phone->>ABS: Download book before the walk
+    Note over Phone: Listen online or offline
+    Phone->>ABS: Save position when connected
+    Bridge->>ABS: Read listening position
+    Bridge->>Bridge: Align audio time to EPUB text
+    Bridge->>BO: Save aligned reading location
+    Reader->>Bridge: Pull progress before reading
+    Bridge-->>Reader: Return EPUB text location
+    Note over Reader: Continue reading
+    Reader->>Bridge: Push progress when finished
+    Bridge->>ABS: Update corresponding audio position
+    Phone->>ABS: Refresh before resuming audio
+```
+
+### 1. Put the ebook and audiobook in your library
+
+1. Copy the EPUB and its matching M4B or MP3 files into the [watched media folder](#add-books-then-take-them-with-you). Use a separate folder for each audiobook.
+2. Open BookOrbit and confirm that the EPUB is readable. Open Audiobookshelf and confirm that the audiobook plays and has sensible chapter markers. Allow the library scanners to finish; rescan if the title is missing.
+3. Use the **same EPUB edition and file** on KOReader that you select for alignment. An abridged recording, different edition, or edited EPUB can produce mismatches.
+4. Keep that file unchanged after pairing. If you replace an edition or recording, update the mapping and rebuild alignment.
+
+### 2. Know which account signs in where
+
+| Where you are signing in | Credentials to use |
+|---|---|
+| BookOrbit website | Your BookOrbit account |
+| Audiobookshelf website | Your Audiobookshelf account |
+| Prologue → Audiobookshelf server | The same Audiobookshelf account used by BookBridge |
+| BookBridge website | Your BookBridge account |
+| KOReader → Progress sync | The KoSync username/password configured under your BookBridge account |
+| KOReader → BookOrbit companion plugin | The integration credentials configured in BookOrbit; these may differ from its website login |
+
+For a native installation created with this kit, initial application credentials are stored **privately on the server** in `native/config/accounts.json`. Open that file locally when needed; do not commit it or post a screenshot. There is no shared demo login, and the services do not automatically share passwords. If you change a service password or revoke its API token, retest the corresponding BookBridge connection.
+
+### 3. Make the server reachable from your phone and reader
+
+1. Follow [Remote access with Tailscale](#remote-access-with-tailscale). Keep the Mac awake, logged in, and running the services. Tailscale must also be connected on each supported client that uses the private address.
+2. Replace `MAC_TAILSCALE_ADDRESS` below with your own Mac's address. These are templates, not working public endpoints.
+3. Open the relevant login page in the client device's browser first. Do not use `localhost` on the phone or e-reader.
+
+| Service | Native Mac address from a remote client |
+|---|---|
+| BookOrbit | `http://MAC_TAILSCALE_ADDRESS:3000` |
+| Audiobookshelf / Prologue server | `http://MAC_TAILSCALE_ADDRESS:13378/audiobookshelf` |
+| BookBridge / KOReader sync server | `http://MAC_TAILSCALE_ADDRESS:5757` |
+
+For Linux Compose with the supplied proxy, use your configured `https://books.example.com`, `https://audio.example.com`, and `https://bridge.example.com` instead. That deployment uses separate subdomains; do not blindly append the native Mac ports or `/audiobookshelf` prefix. A reader without Tailscale needs a reachable LAN address at home or a separately configured remote access path.
+
+### 4. Connect Prologue on your iPhone
+
+1. Install [Prologue](https://prologue.audio/). Its current release supports Audiobookshelf, background listening and offline downloads; check the current App Store feature/pricing details. KOReader itself is not an iPhone app.
+2. In Prologue, add a server and select **Audiobookshelf**. Button wording can vary by release.
+3. Enter the complete Audiobookshelf server address from the table, including `/audiobookshelf` for this native Mac setup.
+4. Sign in with your **Audiobookshelf username and password**, not your BookOrbit or BookBridge login.
+5. Open the library, find the audiobook, and play a short passage. Check chapter navigation and adjust the player's speed to your preference.
+6. Download the book and wait for the download to finish. Test playback with the screen locked; then briefly test offline playback before relying on it for a walk.
+
+Use the same Audiobookshelf user in Prologue and BookBridge: playback progress belongs to a user, not just to a book. Offline playback does not immediately send progress to the server.
+
+### 5. Configure BookBridge and pair the editions
+
+1. Open BookBridge and sign in. Under **Settings**, enable Audiobookshelf, BookOrbit and KOReader/KoSync. Set reachable **server-side** URLs. On the native Mac these can be `http://127.0.0.1:13378/audiobookshelf` and `http://127.0.0.1:3000`; container deployments need their appropriate internal service URLs.
+2. Open **Account → My Integrations** (also available at `/account/integrations`). Configure Audiobookshelf with the API credential for the user you use in Prologue, and BookOrbit with your ebook account. To create an Audiobookshelf key, open its web interface as an administrator, choose **Settings → API Keys → New API Key**, give it a name such as `BookBridge`, select the **same user as Prologue**, submit, and copy the generated key into BookBridge. Keep this key private. Use the connection-test controls to verify both integrations.
+3. In that same account's **KOReader / KoSync** integration, enable it and choose a private KoSync username/password. These are what you will enter on the reader.
+4. In the global **Settings → KOReader/KoSync** section, select the **built-in KoSync server**. Confirm that **Target KOSync URL** is populated. For this native Mac installation, the bridge's internal relay URL is `http://127.0.0.1:5757`. Leaving it blank can allow reader authentication while preventing the bridge's sync client from writing positions. Use the deployment's built-in URL for Linux; this internal address is different from the address entered on a remote reader.
+5. Open **Add / Update Book**, search for your title, select the **Audiobookshelf audiobook**, and select the **BookOrbit EPUB**. Skip Storyteller unless you separately use it. Do not select “No audio” or an audio-only mapping for this workflow.
+6. Add that pair to the queue, then choose **Match All / process queue**. Review the queue so it contains only the books you intend to pair. Labels differ slightly between versions.
+7. Wait for transcription/alignment to finish and the book to become **active**. This is background processing; adding a pair to the queue is not completion. Read the error/quality information if it fails.
+8. Run the book's **Sync now** action and check its saved progress. Alignment should translate listening time into a text location, not blindly copy the audiobook percentage into the EPUB.
+
+Music, opening credits and added narrator commentary have no equivalent words in the EPUB. Test positions immediately before and after those additions; alignment quality scores are diagnostics, not a guarantee of sentence-perfect handoff. The local demonstration completed full-book alignment and successfully transferred real listening progress into BookOrbit and a retrievable KoSync text locator. A reader-device round trip still needs testing on your installation.
+
+Upstream reference: [BookBridge getting started and KOReader setup](https://github.com/cporcellijr/bookbridge/blob/main/docs/getting-started.md).
+
+### 6. Connect KOReader on the e-reader
+
+1. Open the matching EPUB in KOReader. Tap the top-center area to open the menu, then select the **Tools / crossed-tools tab → Progress sync**. Menu placement can vary by KOReader release.
+2. Set **Custom sync server** to `http://MAC_TAILSCALE_ADDRESS:5757` for remote access to the native Mac. Enter the base address only—do not add `/api` or `/koreader`. Use your reachable HTTPS bridge address for a proxy deployment.
+3. Choose **Login**, using the **KoSync credentials from BookBridge My Integrations**. Do not use Register to create an unrelated account.
+4. **Pull progress from the server first**, before pushing an old device position. Confirm that you land near the passage you last heard.
+5. Enable automatic progress synchronization once that first pull works. At the end of a reading session, push progress or confirm that automatic sync has completed before switching devices.
+6. If the book is not recognized, check **BookBridge → Add / Update Book → Reader Documents** and link the document reported by the reader to the correct mapping. Do not guess that two similarly named EPUBs have the same document identity.
+
+The optional **Bridge Sync** KOReader plugin is available under **BookBridge → Account → Connect a KOReader device**. It can deliver the paired EPUB unchanged and adds further device integrations. The built-in KOReader **Progress sync** feature is sufficient for position sync; another plugin is not required just to test the handoff. Keep the BookOrbit plugin for its library and supported annotation functions. Avoid having multiple integrations independently overwrite the same reading position; use this bridge as the chosen progress-sync route and test your configuration.
+
+### 7. Before, during and after the walk
+
+**Before leaving**
+
+1. If you were reading on the e-reader, close/save the book and let KOReader push its latest position.
+2. Let BookBridge sync, then refresh Prologue and check the starting passage. Do not resume an old cached position without checking it.
+3. Confirm the audiobook download is complete and your headphones/lock-screen controls work.
+
+**During the walk**
+
+1. Listen in Prologue. Change speed, pause, or use a bookmark as needed.
+2. If you lose connectivity, a downloaded audiobook can continue playing. Its new position reaches the other services only after synchronization reconnects.
+
+**When you return to reading**
+
+1. Pause Prologue. Reconnect the phone to the server and allow playback progress to upload. Open Audiobookshelf if you need to confirm the saved position.
+2. Allow BookBridge's normal cycle—**up to five minutes by default**—or use **Sync now** for the mapped book. Instant sync may be quicker where supported.
+3. Connect the e-reader, open that same EPUB, and **pull progress**. Check the nearby sentence before continuing.
+4. At the end of reading, push the new position. Before the next listening session, let the bridge sync and refresh Prologue again.
+
+Test with a short passage before a long outing: listen, pause, pull on KOReader, read a little farther, push, and resume audio. Page numbers can differ by font and screen; compare the passage, not the page number.
+
+### If the handoff does not work
+
+| Symptom | Check |
+|---|---|
+| Phone cannot connect | Complete server URL, Mac awake, services running, Tailscale on both ends, network policy; no `localhost` on the phone |
+| Login fails | Correct service's account; Prologue uses Audiobookshelf credentials, KOReader uses configured KoSync credentials |
+| Reader login works but no position arrives | Built-in KoSync target URL is populated; book mapping is active; matching document identity; a text locator exists |
+| Book absent from Prologue | Audiobookshelf scan/import, correct library and user, refresh client |
+| Progress stays at the pre-walk position | Offline progress has uploaded, same Audiobookshelf user in Prologue and the bridge, wait for sync or run Sync now |
+| Wrong passage after pulling | Same EPUB edition; alignment quality; added/nonmatching audio; correct Reader Documents link |
+| Position jumps between devices | Pause the first device, finish syncing, then pull on the next; check for competing progress integrations |
+
+Never reset progress or recreate a working account as the first troubleshooting step. Check the mapped book's state and service connection tests first.
 
 ## ✍️ Write on your books
 
