@@ -18,7 +18,7 @@ Native on Apple Silicon · Docker Compose on Linux · KOReader companion plugins
 
 Bring an ebook library, audiobook server, and reading integrations together. Run native services on a Mac Mini without a Linux VM, or host the stack on a Linux server with persistent storage and HTTPS.
 
-This is an **independent deployment kit** for [BookOrbit](https://github.com/bookorbit/bookorbit), [Audiobookshelf](https://github.com/advplyr/audiobookshelf), and [BookBridge](https://github.com/cporcellijr/bookbridge). It is not an official distribution of those projects. Their source code, full books, proprietary fonts, and personalized plugins are not bundled. A short narrated demonstration excerpt is included below.
+This is an **independent deployment kit** for [BookOrbit](https://github.com/bookorbit/bookorbit), [Audiobookshelf](https://github.com/advplyr/audiobookshelf), and [BookBridge](https://github.com/cporcellijr/bookbridge). It is not an official distribution of those projects. Full upstream checkouts, full books, proprietary fonts, and personalized plugins are not bundled. A targeted BookOrbit source patch adds optional local audiobook creation. A short narrated demonstration excerpt is included below.
 
 ## Listen to the sample
 
@@ -26,7 +26,7 @@ This is an **independent deployment kit** for [BookOrbit](https://github.com/boo
 
 An original synthetic narrator reads an excerpt from *History of Physics* by Jordan Maxwell, with a brisk six-second musical cue and a short, clearly separated reflection. Soft beeps identify the commentary; the book continues after a complete paragraph. The sample demonstrates narration and transitions, not a recording of a device handoff. Your browser may play the MP3 directly or download it.
 
-The full recording and the experimental MLX studio are not bundled. See [attribution and sample scope](THIRD_PARTY.md). No account or server is needed to hear the sample.
+The full recording and model weights are not bundled. Optional local studio code is included; see the [creation guide](docs/AUDIOBOOK_STUDIO.md). See [attribution and sample scope](THIRD_PARTY.md). No account or server is needed to hear the sample.
 
 ## What you get
 
@@ -39,7 +39,8 @@ The full recording and the experimental MLX studio are not bundled. See [attribu
 | Handwriting over EPUBs | Optional Stylus Annotations plugin; device/layout limitations apply |
 | PDF handwriting and export | Optional Ink Away plugin |
 | Handwriting in BookOrbit or on iPhone | **Planned**; strokes currently stay on the reader |
-| On-demand Kokoro narration | **Planned**; no TTS engine is installed by this kit |
+| EPUB to chaptered M4B | Optional **Mac audiobook studio**, launched from Book Details |
+| On-demand Kokoro narration | **Planned**; separate from offline audiobook creation |
 
 ## Architecture
 
@@ -77,18 +78,19 @@ flowchart TB
     K <-->|KoSync text location, configured per user| R
     W <-->|Read and manage| B
     P <-->|Audio and playback progress| A
-    subgraph Future[Additional workflows not bundled in this release]
-        TTS["Local MLX audiobook studio prototype<br/>Directed narration, review and M4B mastering"]
+    subgraph Optional[Optional workflows]
+        TTS["Local MLX audiobook studio<br/>Book Details action, private jobs, review and M4B mastering"]
         ST["Storyteller evaluation<br/>Align existing EPUB + audio into read-aloud EPUB"]
         INKSYNC["Planned handwriting upload<br/>Gallery and passage export"]
     end
-    TTS -.->|Experimental completed M4B import| MEDIA
+    B -->|Authorized create / status| TTS
+    TTS -->|Verified M4B, watched import| MEDIA
     MEDIA -.->|Optional processing| ST
     LOCAL -.->|Not implemented| INKSYNC
     INKSYNC -.-> B
 ```
 
-Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. A local MLX experiment produced a full chaptered M4B and the public sample above; its studio code and model weights are not included in this deployment kit. BookBridge pairing, alignment and server-side progress transfer were exercised separately. On-demand Kokoro and easier profile transfer remain future work. See the [production specification](docs/SPEC.md#p0--local-audiobook-production) for the chapter-by-chapter workflow and acceptance checks.
+Solid lines show the existing components and integration paths; dashed lines show optional or future additions. Text highlights and typed notes can sync through the BookOrbit plugin. Handwritten strokes currently stay on the reader. A local MLX experiment produced a full chaptered M4B and the public sample above; its generalized studio worker and BookOrbit source patch are now included, while model weights and personal narrator assets stay private. BookBridge pairing, alignment and server-side progress transfer were exercised separately. On-demand Kokoro and easier profile transfer remain future work. See the [production specification](docs/SPEC.md#p0--local-audiobook-production) for the chapter-by-chapter workflow and acceptance checks.
 
 ```mermaid
 flowchart LR
@@ -361,6 +363,16 @@ Test with a short passage before a long outing: listen, pause, pull on KOReader,
 | Position jumps between devices | Pause the first device, finish syncing, then pull on the next; check for competing progress integrations |
 
 Never reset progress or recreate a working account as the first troubleshooting step. Check the mapped book's state and service connection tests first.
+
+## Create an audiobook from a book
+
+On the patched native Mac installation, open **Book → Details → Listen or create an audiobook**.
+
+- **Audio already attached:** choose **Listen to existing audiobook**.
+- **Audio in a separate entry:** expand the existing-audio option and link that entry's BookOrbit ID.
+- **No audio yet:** an administrator can choose **Create audiobook** after configuring the local studio. Progress is visible, interrupted jobs can resume, and finished M4B files are placed in the watched library.
+
+The [Audiobook Studio guide](docs/AUDIOBOOK_STUDIO.md) covers installation, narrator setup, progress, downloads and limitations. Creation uses Apple Silicon MLX; the Linux Compose image currently supports playback only. The studio preview does not sync progress: import the finished recording into Audiobookshelf and pair it in BookBridge for the walk-to-reader workflow above.
 
 ## ✍️ Write on your books
 

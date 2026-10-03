@@ -1,6 +1,6 @@
 # Product specification & TODO list
 
-Status: roadmap, not features delivered by this deployment kit. A local full-book experiment, a public sample, and server-side audio-to-EPUB handoff have been exercised. The studio is not bundled; device round-trip validation and reproducible studio packaging remain outstanding.
+Status: roadmap, not features delivered by this deployment kit. A local full-book experiment, a public sample, and server-side audio-to-EPUB handoff have been exercised. An optional Mac studio worker and BookOrbit UI patch are now included; device round-trip validation, automatic bridge pairing, and a Linux synthesis backend remain outstanding.
 
 ## Goal
 
@@ -22,7 +22,7 @@ Produce complete, chaptered audiobooks locally on Apple Silicon before building 
 - [ ] Import the completed M4B into the audiobook library and test chapter navigation, adjustable player speed, offline playback, and resume on a phone.
 - [ ] Measure wall time, active generation time, audio duration, peak MLX memory, and output size. Estimate remaining time from the current book's measured throughput.
 - [ ] Provide one-job-at-a-time operation, configurable idle intervals, safe pause/resume, and model unloading when finished. Idle intervals reduce average load; they are not an instantaneous GPU limit or a hardware-lifespan guarantee.
-- [ ] Package the experimental studio with reproducible setup instructions after the first complete-book test. Models, source books, generated recordings, personal configuration, and credentials remain outside the public repository.
+- [x] Package the experimental studio with setup instructions and an optional native Mac BookOrbit UI integration. Models, source books, generated recordings, personal configuration, and credentials remain outside the public repository.
 
 Acceptance: convert a locally supplied EPUB into a complete, playable M4B with correct chapter boundaries, no detected missing passages, and reviewed sample passages from across the book. Resume an interrupted run without overwriting approved audio. Publish measured costs and known quality limits, not a promise of human-narrator equivalence.
 

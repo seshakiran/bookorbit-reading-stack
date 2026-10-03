@@ -8,9 +8,12 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 allowed = {
-    'README.md', 'LICENSE', 'THIRD_PARTY.md', 'CONTRIBUTING.md', '.gitignore',
+    '.gitattributes', 'README.md', 'LICENSE', 'THIRD_PARTY.md', 'CONTRIBUTING.md', '.gitignore',
     '.github/workflows/validate.yml',
     'assets/audio/marvin-reading-handoff-sample.mp3',
+    'docs/AUDIOBOOK_STUDIO.md', 'scripts/apply_studio.py',
+    'patches/bookorbit-audiobook-studio.patch', 'patches/LICENSE',
+    *('studio/' + n for n in ['worker.py', 'produce_book.py', 'quality_check.py', 'setup.py', 'voice.py', 'test_worker.py', 'requirements.txt']),
     *('docs/' + n for n in ['SPEC.md', 'PLUGINS.md', 'VALIDATION.md']),
     *('scripts/' + n for n in ['check_public_tree.py', 'validate.py']),
     *('native/' + n for n in ['README.md', 'install.sh', 'configure.py', 'run.py',

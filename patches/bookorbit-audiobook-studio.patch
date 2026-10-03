@@ -1,0 +1,570 @@
+diff --git a/client/src/views/BookDetailView.vue b/client/src/views/BookDetailView.vue
+index 8e923f1..4a7cdbc 100644
+--- a/client/src/views/BookDetailView.vue
++++ b/client/src/views/BookDetailView.vue
+@@ -3,6 +3,7 @@ import { computed, defineAsyncComponent, onMounted, provide, watch } from 'vue'
+ import { useRoute } from 'vue-router'
+ import { useI18n } from 'vue-i18n'
+ import type { BookDetail, BookMetadataLockField } from '@bookorbit/types'
++import AudiobookStudio from '@/features/book/components/detail/AudiobookStudio.vue'
+ import BookDetailLayout from '@/features/book/components/detail/BookDetailLayout.vue'
+ import DetailsTab from '@/features/book/components/detail/tabs/DetailsTab.vue'
+ import FilesTab from '@/features/book/components/detail/tabs/FilesTab.vue'
+@@ -136,6 +137,7 @@ function onCoverChanged() {
+   <BookDetailLayout :book-id="bookId" :cover-tint="coverTint">
+     <Transition name="content" mode="out-in">
+       <div v-if="detail" key="detail" class="@container/book-detail h-full">
++        <AudiobookStudio v-if="tab === 'details'" :key="bookId" :book-id="bookId" />
+         <!--
+           Only the two lazy tabs are cached. Both fetch on mount, so without this every return
+           replays blank -> skeleton -> content in under 120ms, which reads as a flash rather than
+diff --git a/packages/types/src/index.ts b/packages/types/src/index.ts
+index 3398b3c..a22e86e 100644
+--- a/packages/types/src/index.ts
++++ b/packages/types/src/index.ts
+@@ -82,3 +82,5 @@ export * from "./cron";
+ export * from "./tts";
+ export * from "./watch-download";
+ export * from "./podcast";
++
++export * from "./studio";
+diff --git a/server/src/config/config.ts b/server/src/config/config.ts
+index ba47a59..c9c6b03 100644
+--- a/server/src/config/config.ts
++++ b/server/src/config/config.ts
+@@ -3,6 +3,9 @@ import { join, resolve } from 'path';
+ 
+ import { DEV_CLIENT_ORIGIN } from './dev-client-origin';
+ export const appConfig = registerAs('app', () => ({
++  studioPython: process.env.STUDIO_PYTHON?.trim() || '',
++  studioWorker: process.env.STUDIO_WORKER?.trim() || '',
++  studioConfig: process.env.STUDIO_CONFIG?.trim() || '',
+   nodeEnv: process.env.NODE_ENV ?? 'development',
+   host: process.env.HOST?.trim() || '0.0.0.0',
+   appUrl: process.env.APP_URL ?? DEV_CLIENT_ORIGIN,
+diff --git a/server/src/modules/audiobook/audiobook.module.ts b/server/src/modules/audiobook/audiobook.module.ts
+index ea35b68..bc48c8e 100644
+--- a/server/src/modules/audiobook/audiobook.module.ts
++++ b/server/src/modules/audiobook/audiobook.module.ts
+@@ -1,3 +1,5 @@
++import { StudioService } from './studio.service';
++import { StudioController } from './studio.controller';
+ import { Module } from '@nestjs/common';
+ 
+ import { BookModule } from '../book/book.module';
+@@ -7,7 +9,7 @@ import { AudiobookService } from './audiobook.service';
+ 
+ @Module({
+   imports: [BookModule],
+-  controllers: [AudiobookController],
+-  providers: [AudiobookRepository, AudiobookService],
++  controllers: [AudiobookController, StudioController],
++  providers: [AudiobookRepository, AudiobookService, StudioService],
+ })
+ export class AudiobookModule {}
+diff --git a/client/src/features/book/components/detail/AudiobookStudio.vue b/client/src/features/book/components/detail/AudiobookStudio.vue
+new file mode 100644
+index 0000000..480c480
+--- /dev/null
++++ b/client/src/features/book/components/detail/AudiobookStudio.vue
+@@ -0,0 +1,73 @@
++<script setup lang="ts">
++import { computed, toRef } from 'vue'
++import { useAudiobookStudio } from '../../composables/useAudiobookStudio'
++const props = defineProps<{ bookId: number }>()
++const { status, error, busy, linkId, refresh, create, link, listen } = useAudiobookStudio(toRef(props, 'bookId'))
++const active = computed(() => status.value && !['idle', 'complete', 'failed', 'interrupted'].includes(status.value.state))
++const progress = computed(() =>
++  status.value?.total_chunks ? Math.round((100 * (status.value.completed_chunks ?? 0)) / status.value.total_chunks) : 0,
++)
++const audioUrl = computed(() => `/api/v1/audiobook-studio/${props.bookId}/audio`)
++const stateLabel = computed(() => status.value?.state.replaceAll('_', ' '))
++</script>
++<template>
++  <section class="m-4 rounded-xl border bg-card p-4 space-y-3" aria-label="Audiobook studio">
++    <div class="flex flex-wrap items-center justify-between gap-3">
++      <div>
++        <h2 class="font-semibold">Listen or create an audiobook</h2>
++        <p class="text-sm text-muted-foreground">Keep your ebook and listen to its audio edition.</p>
++      </div>
++      <button class="rounded border px-3 py-2 text-sm hover:bg-muted" :disabled="busy" @click="refresh">Refresh</button>
++    </div>
++    <p v-if="error" role="alert" class="text-sm text-destructive">{{ error }}</p>
++    <template v-if="status">
++      <button v-if="status.playback" class="rounded bg-primary text-primary-foreground px-4 py-2" @click="listen">
++        Listen to existing audiobook
++      </button>
++      <template v-else-if="status.generatedAudio">
++        <audio :src="audioUrl" controls preload="none" class="w-full" />
++        <p class="text-sm text-muted-foreground">
++          Preview only: this player does not sync reading progress. For walks, open the imported book in Audiobookshelf or Prologue and pair it in
++          BookBridge.
++        </p>
++        <a :href="audioUrl" download="audiobook.m4b" class="underline text-sm">Download M4B</a>
++      </template>
++      <template v-else-if="active">
++        <p role="status" class="text-sm">{{ stateLabel }} · {{ progress }}% of passages</p>
++        <progress :value="progress" max="100" class="w-full" />
++        <p class="text-sm text-muted-foreground">You can leave this page. The Mac must stay awake. Mastering and quality checks follow narration.</p>
++      </template>
++      <template v-else>
++        <p v-if="!status.configured" class="text-sm text-muted-foreground">
++          An administrator must configure the local narration engine before creation is available.
++        </p>
++        <p v-else-if="!status.hasEpub" class="text-sm text-muted-foreground">Add an EPUB edition to create narration.</p>
++        <template v-else-if="status.canCreate">
++          <p class="text-sm text-muted-foreground">
++            Narrator: {{ status.narrator }}. Creates the full EPUB at 93% pace, with chapter cues. One book at a time; large books can take hours.
++            Review the result before relying on it.
++          </p>
++          <button :disabled="busy" class="rounded bg-primary text-primary-foreground px-4 py-2 disabled:opacity-50" @click="create">
++            {{ ['failed', 'interrupted'].includes(status.state) ? 'Resume audiobook creation' : 'Create audiobook' }}
++          </button>
++        </template>
++        <p v-else class="text-sm text-muted-foreground">Ask an administrator to create this audiobook.</p>
++      </template>
++      <p v-if="status.message" class="text-sm text-muted-foreground">{{ status.message }}</p>
++      <p v-if="status.chunks_with_asr_review_flags" class="text-sm text-muted-foreground">
++        {{ status.chunks_with_asr_review_flags }} passages flagged by automated transcription for listening review.
++      </p>
++      <details v-if="status.configured && !active" class="text-sm">
++        <summary class="cursor-pointer">Already have audio in another BookOrbit entry?</summary>
++        <div class="mt-2 flex flex-wrap gap-2 items-center">
++          <label :for="`audio-link-${bookId}`">Audio edition book ID</label>
++          <input :id="`audio-link-${bookId}`" v-model="linkId" type="number" min="1" class="rounded border bg-background px-2 py-2 w-28" />
++          <button :disabled="busy" class="rounded border px-3 py-2 hover:bg-muted" @click="link">Link existing audio</button>
++        </div>
++        <p class="mt-2 text-muted-foreground">
++          Use the number in that audio book's BookOrbit page URL. This link selects playback; set up BookBridge separately for text-position handoff.
++        </p>
++      </details>
++    </template>
++  </section>
++</template>
+diff --git a/client/src/features/book/composables/__tests__/useAudiobookStudio.spec.ts b/client/src/features/book/composables/__tests__/useAudiobookStudio.spec.ts
+new file mode 100644
+index 0000000..a4bcbfa
+--- /dev/null
++++ b/client/src/features/book/composables/__tests__/useAudiobookStudio.spec.ts
+@@ -0,0 +1,46 @@
++import { describe, it, expect, vi, afterEach } from 'vitest'
++import { defineComponent, ref } from 'vue'
++import { mount, flushPromises } from '@vue/test-utils'
++import { useAudiobookStudio } from '../useAudiobookStudio'
++const { api, push } = vi.hoisted(() => ({ api: vi.fn(), push: vi.fn() }))
++vi.mock('@/lib/api', () => ({ api }))
++vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
++afterEach(() => {
++  vi.clearAllMocks()
++})
++describe('audiobook studio actions', () => {
++  it('opens the existing audio edition instead of the source EPUB', async () => {
++    api.mockResolvedValue({ ok: true, json: async () => ({ state: 'idle', playback: { bookId: 106, fileId: 77, format: 'm4b' } }) })
++    const wrapper = mount(
++      defineComponent({
++        setup() {
++          return useAudiobookStudio(ref(8))
++        },
++        template: '<button @click="listen">Listen</button>',
++      }),
++    )
++    await flushPromises()
++    await wrapper.get('button').trigger('click')
++    await flushPromises()
++    expect(push).toHaveBeenCalledWith({ name: 'reader', params: { bookId: 106, fileId: 77 }, query: { format: 'm4b' } })
++    wrapper.unmount()
++  })
++  it('surfaces a busy response instead of reporting creation success', async () => {
++    api
++      .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'idle' }) })
++      .mockResolvedValueOnce({ ok: false, json: async () => ({ message: 'Studio busy' }) })
++    const wrapper = mount(
++      defineComponent({
++        setup() {
++          return useAudiobookStudio(ref(8))
++        },
++        template: '<button @click="create">Create</button><p>{{error}}</p>',
++      }),
++    )
++    await flushPromises()
++    await wrapper.get('button').trigger('click')
++    await flushPromises()
++    expect(wrapper.text()).toContain('Studio busy')
++    wrapper.unmount()
++  })
++})
+diff --git a/client/src/features/book/composables/useAudiobookStudio.ts b/client/src/features/book/composables/useAudiobookStudio.ts
+new file mode 100644
+index 0000000..9e8e3a7
+--- /dev/null
++++ b/client/src/features/book/composables/useAudiobookStudio.ts
+@@ -0,0 +1,81 @@
++import { ref, watch, onUnmounted, type Ref } from 'vue'
++import { useRouter } from 'vue-router'
++import type { StudioStatus } from '@bookorbit/types'
++import { api } from '@/lib/api'
++
++export function useAudiobookStudio(bookId: Ref<number>) {
++  const status = ref<StudioStatus | null>(null)
++  const error = ref('')
++  const busy = ref(false)
++  const linkId = ref('')
++  const router = useRouter()
++  let timer: ReturnType<typeof setTimeout> | undefined
++  let generation = 0
++  let disposed = false
++  async function request(method = 'GET', suffix = '', body?: object) {
++    const id = bookId.value
++    const version = ++generation
++    if (timer) clearTimeout(timer)
++    try {
++      const response = await api(`/api/v1/audiobook-studio/${id}${suffix}`, {
++        method,
++        ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
++      })
++      if (!response.ok) {
++        const data = await response.json()
++        throw new Error(data.message || 'Audiobook studio request failed')
++      }
++      const next = (await response.json()) as StudioStatus
++      if (disposed || version !== generation) return
++      status.value = next
++      error.value = ''
++      if (!['idle', 'complete', 'failed', 'interrupted'].includes(next.state)) timer = setTimeout(refresh, 5000)
++    } catch (e) {
++      if (!disposed && version === generation) error.value = e instanceof Error ? e.message : 'Connection failed'
++    }
++  }
++  async function refresh() {
++    await request()
++  }
++  async function create() {
++    busy.value = true
++    try {
++      await request('POST')
++    } finally {
++      busy.value = false
++    }
++  }
++  async function link() {
++    const id = Number(linkId.value)
++    if (!Number.isSafeInteger(id) || id < 1) {
++      error.value = 'Enter the audio edition book ID from its BookOrbit URL.'
++      return
++    }
++    busy.value = true
++    try {
++      await request('POST', '/link', { bookId: id })
++    } finally {
++      busy.value = false
++    }
++  }
++  async function listen() {
++    const audio = status.value?.playback
++    if (audio) await router.push({ name: 'reader', params: { bookId: audio.bookId, fileId: audio.fileId }, query: { format: audio.format } })
++  }
++  watch(
++    bookId,
++    () => {
++      status.value = null
++      error.value = ''
++      linkId.value = ''
++      void refresh()
++    },
++    { immediate: true },
++  )
++  onUnmounted(() => {
++    disposed = true
++    generation++
++    if (timer) clearTimeout(timer)
++  })
++  return { status, error, busy, linkId, refresh, create, link, listen }
++}
+diff --git a/packages/types/src/studio.ts b/packages/types/src/studio.ts
+new file mode 100644
+index 0000000..a266cfd
+--- /dev/null
++++ b/packages/types/src/studio.ts
+@@ -0,0 +1,13 @@
++export interface StudioStatus {
++  state: string;
++  configured: boolean;
++  narrator?: string;
++  message?: string;
++  completed_chunks?: number;
++  total_chunks?: number;
++  chunks_with_asr_review_flags?: number;
++  playback?: { bookId: number; fileId: number; format: string };
++  generatedAudio?: boolean;
++  canCreate: boolean;
++  hasEpub: boolean;
++}
+diff --git a/server/src/modules/audiobook/dto/link-studio-audio.dto.ts b/server/src/modules/audiobook/dto/link-studio-audio.dto.ts
+new file mode 100644
+index 0000000..7def9f9
+--- /dev/null
++++ b/server/src/modules/audiobook/dto/link-studio-audio.dto.ts
+@@ -0,0 +1,6 @@
++import { IsInt, Min } from 'class-validator';
++export class LinkStudioAudioDto {
++  @IsInt()
++  @Min(1)
++  bookId: number;
++}
+diff --git a/server/src/modules/audiobook/studio.controller.ts b/server/src/modules/audiobook/studio.controller.ts
+new file mode 100644
+index 0000000..a7cb594
+--- /dev/null
++++ b/server/src/modules/audiobook/studio.controller.ts
+@@ -0,0 +1,53 @@
++import { Body, Controller, Get, Headers, Param, ParseIntPipe, Post, Res } from '@nestjs/common';
++import { createReadStream } from 'node:fs';
++import { stat } from 'node:fs/promises';
++import type { FastifyReply } from 'fastify';
++import { Permission } from '@bookorbit/types';
++import { CurrentUser } from '../../common/decorators/current-user.decorator';
++import { RequirePermission } from '../../common/decorators/require-permission.decorator';
++import type { RequestUser } from '../../common/types/request-user';
++import { LinkStudioAudioDto } from './dto/link-studio-audio.dto';
++import { StudioService } from './studio.service';
++
++@Controller('audiobook-studio')
++export class StudioController {
++  constructor(private readonly service: StudioService) {}
++  @Get(':bookId')
++  status(@Param('bookId', ParseIntPipe) id: number, @CurrentUser() user: RequestUser) {
++    return this.service.status(id, user);
++  }
++  @Post(':bookId')
++  @RequirePermission(Permission.ManageAppSettings)
++  start(@Param('bookId', ParseIntPipe) id: number, @CurrentUser() user: RequestUser) {
++    return this.service.start(id, user);
++  }
++  @Post(':bookId/link')
++  link(@Param('bookId', ParseIntPipe) id: number, @Body() dto: LinkStudioAudioDto, @CurrentUser() user: RequestUser) {
++    return this.service.link(id, dto.bookId, user);
++  }
++  @Get(':bookId/audio')
++  async audio(
++    @Param('bookId', ParseIntPipe) id: number,
++    @CurrentUser() user: RequestUser,
++    @Headers('range') range: string | undefined,
++    @Res() reply: FastifyReply,
++  ) {
++    const path = await this.service.audio(id, user);
++    const { size } = await stat(path);
++    reply.type('audio/mp4').header('Accept-Ranges', 'bytes').header('Cache-Control', 'private, no-store');
++    if (range) {
++      const match = /^bytes=(\d+)-(\d*)$/.exec(range);
++      const start = match ? Number(match[1]) : NaN;
++      const end = match?.[2] ? Number(match[2]) : size - 1;
++      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= size || end < start || end >= size) {
++        return reply.status(416).header('Content-Range', `bytes */${size}`).send();
++      }
++      return reply
++        .status(206)
++        .header('Content-Range', `bytes ${start}-${end}/${size}`)
++        .header('Content-Length', end - start + 1)
++        .send(createReadStream(path, { start, end }));
++    }
++    return reply.header('Content-Length', size).send(createReadStream(path));
++  }
++}
+diff --git a/server/src/modules/audiobook/studio.service.test.ts b/server/src/modules/audiobook/studio.service.test.ts
+new file mode 100644
+index 0000000..19d689f
+--- /dev/null
++++ b/server/src/modules/audiobook/studio.service.test.ts
+@@ -0,0 +1,69 @@
++import { describe, it, expect, vi } from 'vitest';
++import { StudioService } from './studio.service';
++import { BookService } from '../book/book.service';
++import type { RequestUser } from '../../common/types/request-user';
++import type { appConfig } from '../../config/config';
++import type { ConfigType } from '@nestjs/config';
++
++const { exec } = vi.hoisted(() => ({ exec: vi.fn() }));
++vi.mock('node:child_process', () => ({ execFile: exec }));
++const user = { id: 7, isSuperuser: true, permissions: [] } as unknown as RequestUser;
++const book = { id: 9, title: 'Test', authors: [], files: [{ id: 90, format: 'epub' }] };
++function setup(enabled = true) {
++  exec.mockReset();
++  const books = {
++    getDetail: vi.fn().mockResolvedValue(book),
++    verifyBookAccess: vi.fn(),
++    getFileInfo: vi.fn().mockResolvedValue({ path: '/private/book.epub' }),
++  };
++  const config = { studioPython: enabled ? 'python' : '', studioWorker: 'worker.py', studioConfig: 'private.json' } as ConfigType<typeof appConfig>;
++  exec.mockImplementation((_python, _args, _opts, cb) => {
++    cb(null, JSON.stringify({ state: 'idle', configured: true }));
++    return { stdin: { end: vi.fn() } };
++  });
++  return { books, service: new StudioService(books as unknown as BookService, config) };
++}
++describe('Audiobook studio', () => {
++  it('rejects generation for an ordinary reader', async () => {
++    const { service } = setup();
++    await expect(service.start(9, { ...user, isSuperuser: false })).rejects.toThrow('permission');
++    expect(exec).not.toHaveBeenCalled();
++  });
++  it('finds existing audio without requiring a configured generator', async () => {
++    const { books, service } = setup(false);
++    books.getDetail.mockResolvedValue({ ...book, files: [{ id: 91, format: 'm4b' }] });
++    expect((await service.status(9, user)).playback).toEqual({ bookId: 9, fileId: 91, format: 'm4b' });
++  });
++  it('never starts generation when audio already exists', async () => {
++    const { books, service } = setup();
++    books.getDetail.mockResolvedValue({ ...book, files: [{ id: 91, format: 'm4b' }] });
++    await service.start(9, user);
++    expect(exec.mock.calls.some((c) => c[1][1] === 'start')).toBe(false);
++  });
++  it('enforces book access before invoking the worker', async () => {
++    const { books, service } = setup();
++    exec.mockClear();
++    books.getDetail.mockRejectedValue(new Error('forbidden'));
++    await expect(service.status(9, user)).rejects.toThrow('forbidden');
++    expect(exec).not.toHaveBeenCalled();
++  });
++  it('checks access to a separately linked audiobook', async () => {
++    const { books, service } = setup();
++    exec.mockImplementation((_p, _a, _o, cb) => {
++      cb(null, JSON.stringify({ linkedBookId: 12 }));
++      return { stdin: { end: vi.fn() } };
++    });
++    books.getDetail.mockResolvedValueOnce(book).mockRejectedValueOnce(new Error('forbidden'));
++    await expect(service.status(9, user)).rejects.toThrow('forbidden');
++    expect(books.getDetail).toHaveBeenLastCalledWith(12, user);
++  });
++  it('rejects linking an ebook-only entry', async () => {
++    const { service } = setup();
++    await expect(service.link(9, 10, user)).rejects.toThrow('containing audio');
++  });
++  it('rejects PDF-only creation', async () => {
++    const { books, service } = setup();
++    books.getDetail.mockResolvedValue({ ...book, files: [{ id: 90, format: 'pdf' }] });
++    await expect(service.start(9, user)).rejects.toThrow('EPUB');
++  });
++});
+diff --git a/server/src/modules/audiobook/studio.service.ts b/server/src/modules/audiobook/studio.service.ts
+new file mode 100644
+index 0000000..6f1a1e7
+--- /dev/null
++++ b/server/src/modules/audiobook/studio.service.ts
+@@ -0,0 +1,117 @@
++import { ForbiddenException, BadRequestException, ConflictException, Inject, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
++import type { ConfigType } from '@nestjs/config';
++import { execFile } from 'node:child_process';
++import { Permission, isAudioFormat, type StudioStatus } from '@bookorbit/types';
++import { appConfig } from '../../config/config';
++import type { RequestUser } from '../../common/types/request-user';
++import { BookService } from '../book/book.service';
++
++interface WorkerResult extends Partial<StudioStatus> {
++  error?: string;
++  linkedBookId?: number;
++  path?: string;
++}
++
++@Injectable()
++export class StudioService {
++  private readonly logger = new Logger(StudioService.name);
++  constructor(
++    private readonly books: BookService,
++    @Inject(appConfig.KEY) private readonly config: ConfigType<typeof appConfig>,
++  ) {}
++
++  private enabled() {
++    return Boolean(this.config.studioPython && this.config.studioWorker && this.config.studioConfig);
++  }
++
++  private call(action: string, bookId: number, user: RequestUser, body?: object): Promise<WorkerResult> {
++    if (!this.enabled()) throw new ServiceUnavailableException('The administrator must configure the audiobook studio first');
++    const started = Date.now();
++    const logAction = action === 'start' || action === 'link';
++    if (logAction) this.logger.log(`[studio.${action}] [start] bookId=${bookId} userId=${user.id} - studio operation started`);
++    return new Promise((resolve, reject) => {
++      const child = execFile(
++        this.config.studioPython,
++        [this.config.studioWorker, action, this.config.studioConfig, `${user.id}-${bookId}`],
++        { timeout: 15000, maxBuffer: 1024 * 1024 },
++        (error, stdout) => {
++          if (error) {
++            if (logAction)
++              this.logger.warn(
++                `[studio.${action}] [fail] bookId=${bookId} userId=${user.id} durationMs=${Date.now() - started} errorClass=WorkerError - studio operation failed`,
++              );
++            reject(new ServiceUnavailableException('Studio worker unavailable. Check the private server logs.'));
++            return;
++          }
++          try {
++            const result = JSON.parse(stdout) as WorkerResult;
++            if (result.error) reject(new ConflictException(result.error));
++            else {
++              if (logAction)
++                this.logger.log(
++                  `[studio.${action}] [end] bookId=${bookId} userId=${user.id} durationMs=${Date.now() - started} - studio operation accepted`,
++                );
++              resolve(result);
++            }
++          } catch {
++            reject(new ServiceUnavailableException('Invalid studio worker response'));
++          }
++        },
++      );
++      child.stdin?.end(JSON.stringify(body ?? {}));
++    });
++  }
++
++  async status(bookId: number, user: RequestUser): Promise<StudioStatus> {
++    const book = await this.books.getDetail(bookId, user);
++    const result = this.enabled() ? await this.call('status', bookId, user) : {};
++    let audioBook = book;
++    if (result.linkedBookId) audioBook = await this.books.getDetail(result.linkedBookId, user);
++    const audio = audioBook.files.find((f) => f.format && isAudioFormat(f.format));
++    return {
++      state: result.state ?? 'idle',
++      configured: result.configured ?? false,
++      narrator: result.narrator,
++      message: result.message,
++      completed_chunks: result.completed_chunks,
++      total_chunks: result.total_chunks,
++      chunks_with_asr_review_flags: result.chunks_with_asr_review_flags,
++      canCreate: user.isSuperuser || user.permissions.includes(Permission.ManageAppSettings),
++      hasEpub: book.files.some((f) => f.format === 'epub'),
++      playback: audio ? { bookId: audioBook.id, fileId: audio.id, format: audio.format! } : undefined,
++      generatedAudio: result.state === 'complete',
++    };
++  }
++
++  async start(bookId: number, user: RequestUser) {
++    if (!user.isSuperuser && !user.permissions.includes(Permission.ManageAppSettings))
++      throw new ForbiddenException('Audiobook creation requires app-settings permission');
++    const current = await this.status(bookId, user);
++    if (current.playback || current.generatedAudio) return current;
++    const book = await this.books.getDetail(bookId, user);
++    const epub = book.files.find((f) => f.format === 'epub');
++    if (!epub) throw new BadRequestException('Creation currently supports EPUB books only');
++    const file = await this.books.getFileInfo(epub.id, user);
++    await this.call('start', bookId, user, {
++      source: file.path,
++      title: book.title ?? 'Untitled',
++      author: book.authors.map((a) => a.name).join(', '),
++    });
++    return this.status(bookId, user);
++  }
++
++  async link(bookId: number, audioBookId: number, user: RequestUser) {
++    await this.books.verifyBookAccess(bookId, user);
++    const target = await this.books.getDetail(audioBookId, user);
++    if (!target.files.some((f) => f.format && isAudioFormat(f.format))) throw new BadRequestException('Choose a book containing audio');
++    await this.call('link', bookId, user, { linkedBookId: audioBookId });
++    return this.status(bookId, user);
++  }
++
++  async audio(bookId: number, user: RequestUser) {
++    await this.books.verifyBookAccess(bookId, user);
++    const result = await this.call('audio', bookId, user);
++    if (!result.path) throw new BadRequestException('Audio is not ready');
++    return result.path;
++  }
++}

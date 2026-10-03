@@ -12,7 +12,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 # Limit discovery to source files: never walk installed dependencies or user data.
-for folder in ['native', 'cloud', 'scripts']:
+for folder in ['native', 'cloud', 'scripts', 'studio']:
     for path in (ROOT / folder).glob('*.py'):
         ast.parse(path.read_text(), filename=str(path.relative_to(ROOT)))
     for path in (ROOT / folder).glob('*.sh'):

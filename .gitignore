@@ -33,3 +33,9 @@ cloud/backups/
 
 # Explicitly reviewed public demonstration only; other audio stays ignored.
 !assets/audio/marvin-reading-handoff-sample.mp3
+
+# Local audiobook studio state and model assets
+studio/venv/
+studio/models/
+studio/jobs/
+studio/config.json

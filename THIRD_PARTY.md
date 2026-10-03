@@ -22,3 +22,9 @@ Download plugins from their upstream maintainers. Check the applicable licenses 
 ## Narration demonstration
 
 `assets/audio/marvin-reading-handoff-sample.mp3` is an approximately two-minute AI-narrated excerpt from *History of Physics* by Jordan Maxwell, with original synthetic music and added narrator commentary. The underlying book text retains its author/rightsholder copyright; the repository's MIT license covers deployment code and does not relicense that text. The sample is not a commercial audiobook recording or a public-figure voice clone. Personal introduction audio, credentials, server addresses and the full audiobook are excluded.
+
+## Optional audiobook creation
+
+`patches/bookorbit-audiobook-studio.patch` modifies the pinned BookOrbit source and is provided under **AGPL-3.0-only**, like upstream BookOrbit. The full license is in [patches/LICENSE](patches/LICENSE). Apply it to the commit recorded in `native/versions.json`; rebuild to obtain the corresponding application. The repository's MIT license does not replace this license.
+
+The optional studio uses MLX Audio, Qwen3-TTS models, faster-whisper, FFmpeg, NumPy, SoundFile and Beautiful Soup. Their licenses and model terms remain their own. Dependencies and model weights are downloaded during private setup rather than redistributed here. The default reference generator creates an original synthetic narrator; personal voice references are never bundled.

@@ -26,6 +26,7 @@ for name, repo in repos.items():
 PY
 npm install --prefix "$ROOT/tools" pnpm@11.22.0 --cache "$ROOT/cache/npm"
 export PATH="$ROOT/tools/node_modules/.bin:$PATH"
+python3.11 ../scripts/apply_studio.py "$ROOT/sources/bookorbit"
 (cd sources/bookorbit && pnpm install --frozen-lockfile && pnpm run build:server && pnpm --filter client run build-only)
 (cd sources/audiobookshelf && npm ci --cache "$ROOT/cache/npm" && npm run build:server && npm --prefix client ci --cache "$ROOT/cache/npm" && npm --prefix client run generate)
 python3.11 -m venv venv
