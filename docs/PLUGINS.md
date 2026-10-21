@@ -42,6 +42,35 @@ This is the confirmed setup for the original installation, not a universal netwo
 
 Sessions and the upload queue live in the reader's private `kindlefetch_bookorbit.json` settings file. Never publish it. Native upload sessions refresh without storing the password. The server's confirmed book ID marks a file as sent; asynchronous metadata work may still be running. See the plugin's [integration notes](https://github.com/seshakiran/kindlefetch.koplugin/blob/main/docs/BOOKORBIT_ROADMAP.md) and this stack's [validation status](VALIDATION.md).
 
+## Search Z-Library from the BookOrbit dashboard
+
+An optional reader patch adds **Search Z-Library** to BookOrbit's search dialog while retaining **Search library** and recent library searches. It requires **Kindle Fetch 0.9.1+** and the reviewed **BookOrbit reader plugin 1.5.5**, from the BookOrbit revision pinned in `native/versions.json`.
+
+1. Install or update [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin#install) on the reader.
+2. Copy your `bookorbit.koplugin` directory to the computer and keep a backup. From this deployment repository, apply the patch to the copied directory:
+
+   ```sh
+   python3 scripts/apply_reader_search.py /path/to/bookorbit.koplugin
+   ```
+
+3. Copy the patched `bookorbit_catalog.lua` back into the reader's existing `bookorbit.koplugin` directory, then fully restart KOReader.
+4. Open the BookOrbit dashboard, tap its search icon, enter a title or author, and choose **Search Z-Library**. Download from the Kindle Fetch results; its existing automatic-upload setting sends the completed file to BookOrbit.
+
+**Search library** remains the default keyboard action and retains BookOrbit scope filters. Z-Library search uses Kindle Fetch's configured language/format filters and login. Closing the Kindle Fetch search returns to the catalog underneath. Refresh BookOrbit to reload its library after an upload if the catalog is showing cached results.
+
+The handoff contains only the search text and runs within KOReader. Neither plugin sends its login credentials to the other service. If Kindle Fetch is missing or disabled, the external search button is disabled. This is a reader integration; BookOrbit's browser/web search is unchanged.
+
+The patch helper verifies the exact original catalog hash, recognizes an already-patched file, and refuses unknown or modified versions. It touches no settings or personalized provision files. Future BookOrbit plugin updates may replace the catalog file: keep your backup and reapply only when the helper accepts the version. Applying this to the pinned BookOrbit source checkout is also supported, but rebuilding/redeploying server-generated plugin packages is a separate deployment step.
+
+Local checks:
+
+```sh
+# Requires Lua 5.1; downloads only the pinned public catalog source into a temporary folder.
+python3 scripts/check_reader_search.py
+```
+
+The patch is derived from BookOrbit and is covered by [the upstream AGPL license](../patches/LICENSE). Kindle Fetch retains its own license. See [validation](VALIDATION.md) for automated and device-test scope.
+
 ## Android folder layout
 
 Locate the existing KOReader data directory; on many Android installations it is `Internal Storage/koreader`. Storage permissions and installation paths vary. Use the directory that already holds your working plugins.

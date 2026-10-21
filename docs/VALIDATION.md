@@ -59,3 +59,9 @@ User-confirmed on the originating **Viwoods AiPaper Mini** with **Kindle Fetch 0
 - The [plugin repository](https://github.com/seshakiran/kindlefetch.koplugin) passed Lua 5.1 and 5.4 CI checks. Its mocked regressions cover native sessions, multipart streaming, queue persistence, duplicate suppression, and failure handling. A separate local LuaSocket wire test exercised login, token refresh and multipart bytes against a test server.
 
 The live success was reported by the user; automated tests did not operate the physical reader. This does not establish every network/VPN combination, a fresh device install, metadata-processing completion, resumable transfers, or all recovery scenarios. No BookOrbit server code change was required for this file-upload workflow. It is separate from the reading/audio progress round trip still listed above.
+
+## BookOrbit reader dashboard search integration
+
+The optional BookOrbit reader **1.5.5** patch is tested against the exact catalog file from the pinned upstream revision. Automated checks exercise the actual patched search-dialog function with reader-widget mocks: library search and scope/recent behavior remain intact, the new Z-Library action hands off the entered query, blank queries do nothing, missing/failed handoffs show a controlled message, and the catalog is retained underneath. Patch application is hash-guarded, idempotent, and refuses unknown local modifications. Kindle Fetch 0.9.1 adds its own regression for query normalization and handoff ownership/teardown.
+
+These tests do not operate the physical reader. The prior live download → automatic upload confirmation above covers the reused Kindle Fetch path; the new dashboard entry point still requires a user device test after installation.

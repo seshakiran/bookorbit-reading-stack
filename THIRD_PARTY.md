@@ -28,3 +28,7 @@ Download plugins from their upstream maintainers. Check the applicable licenses 
 `patches/bookorbit-audiobook-studio.patch` modifies the pinned BookOrbit source and is provided under **AGPL-3.0-only**, like upstream BookOrbit. The full license is in [patches/LICENSE](patches/LICENSE). Apply it to the commit recorded in `native/versions.json`; rebuild to obtain the corresponding application. The repository's MIT license does not replace this license.
 
 The optional studio uses MLX Audio, Qwen3-TTS models, faster-whisper, FFmpeg, NumPy, SoundFile and Beautiful Soup. Their licenses and model terms remain their own. Dependencies and model weights are downloaded during private setup rather than redistributed here. The default reference generator creates an original synthetic narrator; personal voice references are never bundled.
+
+## BookOrbit reader search patch
+
+`patches/bookorbit-kindlefetch-search.patch` modifies the BookOrbit **1.5.5** reader catalog from pinned source revision `c0759ea1bf6bd591f40ee0f82e7f109e480ef264`. It retains the upstream project's AGPL terms; see [patches/LICENSE](patches/LICENSE). The patch exposes a local search-text handoff to the separately installed [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) plugin. Neither complete upstream sources nor personalized plugin credentials are bundled here.

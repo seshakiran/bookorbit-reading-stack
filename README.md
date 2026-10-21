@@ -117,7 +117,7 @@ Tailscale supplies private network access, not application login or book synchro
 
 ## Download on the reader, upload automatically
 
-Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) alongside the BookOrbit companion. Sign in to BookOrbit inside Kindle Fetch, choose a library, and leave automatic uploads on. Each completed download is saved locally and then sent to BookOrbit in the background.
+Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) alongside the BookOrbit companion. Sign in to BookOrbit inside Kindle Fetch, choose a library, and leave automatic uploads on. Each completed download is saved locally and then sent to BookOrbit in the background. With Kindle Fetch 0.9.1+ and the optional [BookOrbit reader search patch](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard), the dashboard search dialog can also search Z-Library and start this same flow.
 
 **Confirmed October 20, 2026:** the originating Viwoods AiPaper Mini completed download → automatic BookOrbit upload with Tailscale left connected, Exit node **None**, Tailscale DNS off on the reader, and Kindle Fetch encrypted DNS on. See the [setup and network notes](docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads) and [validation scope](docs/VALIDATION.md#kindle-fetch-automatic-reader-uploads--october-20-2026). Account setup and reachable networking are still required; the plugin does not toggle the VPN.
 

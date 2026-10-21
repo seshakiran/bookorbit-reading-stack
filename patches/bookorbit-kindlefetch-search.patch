@@ -1,0 +1,55 @@
+--- a/bookorbit_catalog.lua
++++ b/bookorbit_catalog.lua
+@@ -1203,10 +1203,11 @@
+ end
+ 
+ function BookOrbitCatalog:promptSearch(params, scope_title)
++    local shared = require("pluginshare")
+     local has_recents = #(self.settings.catalog_recent_searches or {}) > 0
+     local dialog
+     dialog = InputDialog:new{
+-        title = _("Search BookOrbit"),
++        title = _("Search books"),
+         input_hint = _("Title, author, series, ISBN"),
+         buttons = {
+             {
+@@ -1226,13 +1227,38 @@
+                     end,
+                 },
+                 {
+-                    text = _("Search"),
++                    text = _("Search library"),
+                     is_enter_default = true,
+                     callback = function()
+                         local q = util.trim(dialog:getInputText() or "")
+                         if q == "" then return end
+                         UIManager:close(dialog)
+                         self:runSearch(params, q, scope_title)
++                    end,
++                },
++            },
++            {
++                {
++                    text = _("Search Z-Library"),
++                    enabled = type(shared.kindlefetch_search) == "function",
++                    callback = function()
++                        local q = util.trim(dialog:getInputText() or "")
++                        if q == "" then return end
++                        local search = shared.kindlefetch_search
++                        if type(search) ~= "function" then
++                            UIManager:show(InfoMessage:new{
++                                text = _("Enable Kindle Fetch 0.9.1 or later and restart KOReader to search Z-Library."),
++                            })
++                            return
++                        end
++                        UIManager:close(dialog)
++                        -- Keep the catalog underneath so closing Kindle Fetch returns here.
++                        local ok, opened = pcall(search, q)
++                        if not ok or not opened then
++                            UIManager:show(InfoMessage:new{
++                                text = _("Could not open Z-Library search. Open Kindle Fetch from KOReader's menu and try again."),
++                            })
++                        end
+                     end,
+                 },
+             },
