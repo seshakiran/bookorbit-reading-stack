@@ -34,6 +34,7 @@ The full recording and model weights are not bundled. Optional local studio code
 |---|---|
 | Ebook library | BookOrbit with watched folders |
 | Audiobook listening | Audiobookshelf, with compatible phone clients |
+| Dashboard search → Z-Library | Optional [BookOrbit reader search patch](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard) with Kindle Fetch 0.9.1+ |
 | Reader downloads → BookOrbit | Optional [Kindle Fetch automatic uploads](docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads); confirmed on the original Viwoods reader |
 | KOReader progress and text annotations | BookOrbit's upstream companion plugin; configure separately |
 | Reading/audio integration | BookBridge; pairing and alignment still require setup |
@@ -120,6 +121,12 @@ Tailscale supplies private network access, not application login or book synchro
 Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) alongside the BookOrbit companion. Sign in to BookOrbit inside Kindle Fetch, choose a library, and leave automatic uploads on. Each completed download is saved locally and then sent to BookOrbit in the background. With Kindle Fetch 0.9.1+ and the optional [BookOrbit reader search patch](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard), the dashboard search dialog can also search Z-Library and start this same flow.
 
 **Confirmed October 20, 2026:** the originating Viwoods AiPaper Mini completed download → automatic BookOrbit upload with Tailscale left connected, Exit node **None**, Tailscale DNS off on the reader, and Kindle Fetch encrypted DNS on. See the [setup and network notes](docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads) and [validation scope](docs/VALIDATION.md#kindle-fetch-automatic-reader-uploads--october-20-2026). Account setup and reachable networking are still required; the plugin does not toggle the VPN.
+
+### Search directly from the reader dashboard
+
+On the patched reader, open **BookOrbit → Search**, enter a title or author, then choose **Search library** or **Search Z-Library**. The Z-Library action uses Kindle Fetch's existing results, downloads, filters and automatic uploads. Closing that search returns to BookOrbit; refresh the catalog after an upload if it shows cached results. This changes the KOReader dashboard, not BookOrbit's web search.
+
+The originating Viwoods reader has Kindle Fetch **0.9.1** and the BookOrbit reader **1.5.5** patch installed. All **54 deployed files** were read back and matched the reviewed installation payload. Restart KOReader to activate the action. File deployment and automated checks are verified; the new dashboard entry point still awaits an on-device user test. See the [installation and update instructions](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard), including the patch's version guard.
 
 ## 🍎 Mac quick start
 
