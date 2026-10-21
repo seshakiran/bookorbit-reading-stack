@@ -118,13 +118,20 @@ Tailscale supplies private network access, not application login or book synchro
 
 ## Download on the reader, upload automatically
 
-Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) alongside the BookOrbit companion. Sign in to BookOrbit inside Kindle Fetch, choose a library, and leave automatic uploads on. Each completed download is saved locally and then sent to BookOrbit in the background. With Kindle Fetch 0.10.0+ and the optional [BookOrbit reader search patch](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard), the dashboard search dialog can also search Z-Library and start this same flow.
+Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) alongside the BookOrbit companion. Sign in to BookOrbit inside Kindle Fetch, choose a library, and leave automatic uploads on. Each completed download is saved locally and then sent to BookOrbit in the background. For searches started inside BookOrbit, use the separate import-before-open flow below.
 
 **Confirmed October 20, 2026:** the originating Viwoods AiPaper Mini completed download → automatic BookOrbit upload with Tailscale left connected, Exit node **None**, Tailscale DNS off on the reader, and Kindle Fetch encrypted DNS on. See the [setup and network notes](docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads) and [validation scope](docs/VALIDATION.md#kindle-fetch-automatic-reader-uploads--october-20-2026). Account setup and reachable networking are still required; the plugin does not toggle the VPN.
 
 ### Search and import directly from the reader dashboard
 
+**Confirmed on the originating Viwoods AiPaper Mini on October 20, 2026:** imports upload and open successfully; reopening the book does **not** ask for another download. This was user-tested with Kindle Fetch **0.10.0** and the companion BookOrbit **1.5.5** catalog patch.
+
 With Kindle Fetch **0.10.0+** and the updated BookOrbit **1.5.5** reader patch, open **BookOrbit → Search → Search Z-Library**, select a result, and choose **Import into BookOrbit**. The reader stages the file, uploads it, confirms the server book ID, links the local reading copy, and opens that copy. Later Open/Continue actions reuse it instead of asking for another download. Completed/pending imports are reused.
+
+| Where you search | Download and upload behavior | Opening the book |
+|---|---|---|
+| **BookOrbit dashboard → Search Z-Library** | Stage on the reader, upload to the selected BookOrbit library, then link the local copy | Opens after the confirmed import; later opens reuse the local copy |
+| **Standalone Kindle Fetch** | Save locally; automatically upload only according to the existing setting | Keeps the regular local reading flow |
 
 Standalone Kindle Fetch retains its regular local-download flow and existing auto-upload setting. The dashboard integration imports explicitly even when standalone auto-upload is off. Update both plugins and restart KOReader; the [guarded patch helper](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard) can upgrade the previous search-only patch. This changes the reader dashboard, not web search. See the [validation status](docs/VALIDATION.md) for automated versus physical-device checks.
 
