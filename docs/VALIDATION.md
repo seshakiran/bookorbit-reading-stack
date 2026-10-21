@@ -47,3 +47,15 @@ Validated on the originating Apple Silicon Mac:
 - Live HTTP checks confirmed authentication enforcement, byte-range streaming, invalid-range rejection, no regeneration when existing audio is linked, and rejection of an ebook-only link target.
 
 Not established by these checks: an e-reader/Prologue round trip, fresh-machine dependency installation, Linux synthesis, arbitrary EPUB layout fidelity, or flawless narration of full books. The Linux prebuilt image does not include the optional studio patch.
+
+## Kindle Fetch automatic reader uploads — October 20, 2026
+
+User-confirmed on the originating **Viwoods AiPaper Mini** with **Kindle Fetch 0.9.0** and the existing BookOrbit installation:
+
+- A manual upload of an existing reader book succeeded.
+- After applying the [documented Tailscale setup](PLUGINS.md#tailscale-settings-confirmed-on-the-original-reader), a newly downloaded book appeared automatically in BookOrbit without a manual Send action or VPN toggle.
+- Tailscale stayed connected; the reader used no exit node, Tailscale DNS was disabled, and Kindle Fetch encrypted DNS stayed enabled. The saved server URL used a numeric tailnet address.
+- Before the live test, all 52 installed plugin package files were read back through OpenMTP and matched the source package byte for byte.
+- The [plugin repository](https://github.com/seshakiran/kindlefetch.koplugin) passed Lua 5.1 and 5.4 CI checks. Its mocked regressions cover native sessions, multipart streaming, queue persistence, duplicate suppression, and failure handling. A separate local LuaSocket wire test exercised login, token refresh and multipart bytes against a test server.
+
+The live success was reported by the user; automated tests did not operate the physical reader. This does not establish every network/VPN combination, a fresh device install, metadata-processing completion, resumable transfers, or all recovery scenarios. No BookOrbit server code change was required for this file-upload workflow. It is separate from the reading/audio progress round trip still listed above.

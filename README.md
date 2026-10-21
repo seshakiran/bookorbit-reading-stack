@@ -34,6 +34,7 @@ The full recording and model weights are not bundled. Optional local studio code
 |---|---|
 | Ebook library | BookOrbit with watched folders |
 | Audiobook listening | Audiobookshelf, with compatible phone clients |
+| Reader downloads → BookOrbit | Optional [Kindle Fetch automatic uploads](docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads); confirmed on the original Viwoods reader |
 | KOReader progress and text annotations | BookOrbit's upstream companion plugin; configure separately |
 | Reading/audio integration | BookBridge; pairing and alignment still require setup |
 | Handwriting over EPUBs | Optional Stylus Annotations plugin; device/layout limitations apply |
@@ -56,6 +57,7 @@ flowchart TB
         LOCAL["Reader-local notes and exports<br/>Back up separately"]
         INK --> LOCAL
         K --- INK
+        KF["Kindle Fetch<br/>Z-Library search and reader-local downloads"]
     end
     subgraph Services[Application services]
         B["BookOrbit<br/>Library, reading, progress, text annotations"]
@@ -74,6 +76,7 @@ flowchart TB
         R <-->|Configured service APIs| B
         R <-->|Configured service APIs| A
     end
+    KF -->|Completed book upload, native account session| B
     K <-->|Library and supported annotations| B
     K <-->|KoSync text location, configured per user| R
     W <-->|Read and manage| B
@@ -111,6 +114,12 @@ flowchart LR
 Tailscale supplies private network access, not application login or book synchronization. The native HTTP endpoints are reached through the encrypted tailnet when remote. Linux's public HTTPS deployment is a separate option and still requires destination testing.
 
 > **Validation:** Native services and server-side audio requests were exercised on the original Apple Silicon installation. A fresh-machine install has not yet been independently reproduced. Linux Compose has static validation only. The originating installation completed audiobook alignment and server-side handoff, and Prologue connectivity was reported working. Phone offline/lock-screen behavior and the full e-reader round trip still need device testing. See [validation](docs/VALIDATION.md).
+
+## Download on the reader, upload automatically
+
+Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) alongside the BookOrbit companion. Sign in to BookOrbit inside Kindle Fetch, choose a library, and leave automatic uploads on. Each completed download is saved locally and then sent to BookOrbit in the background.
+
+**Confirmed October 20, 2026:** the originating Viwoods AiPaper Mini completed download → automatic BookOrbit upload with Tailscale left connected, Exit node **None**, Tailscale DNS off on the reader, and Kindle Fetch encrypted DNS on. See the [setup and network notes](docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads) and [validation scope](docs/VALIDATION.md#kindle-fetch-automatic-reader-uploads--october-20-2026). Account setup and reachable networking are still required; the plugin does not toggle the VPN.
 
 ## 🍎 Mac quick start
 

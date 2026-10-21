@@ -24,6 +24,8 @@ The automated setup creates watched BookOrbit and Audiobookshelf libraries. For 
 
 No books or audio are included. Server-side playback was previously tested with generated sample audio.
 
+For automatic reader-to-library uploads, install Kindle Fetch separately and follow the [reader upload and Tailscale setup](../docs/PLUGINS.md#kindle-fetch--automatic-bookorbit-uploads). The original Viwoods reader has completed this flow with Tailscale left connected; no watched-folder bridge or server patch is needed for the supported BookOrbit upload API.
+
 ## Access from readers and phones
 
 Follow the main README's [Mac network and Tailscale instructions](../README.md#reach-the-mac-from-another-device) for address templates, KOReader menu paths and troubleshooting. Replace placeholders locally; never publish your device addresses or personalized plugin packages.

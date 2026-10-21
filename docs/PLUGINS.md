@@ -7,6 +7,7 @@ Install plugins on the e-reader. A server installation does not install them on 
 | Component | Purpose | Required for |
 |---|---|---|
 | [KOReader](https://github.com/koreader/koreader/releases) | Reader application | These reader plugins |
+| [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) | Z-Library search, local downloads and automatic BookOrbit uploads | Optional reader-to-library acquisition |
 | [BookOrbit companion](https://github.com/bookorbit/bookorbit/tree/main/koreader-plugin) | Library access, progress and text annotation sync | BookOrbit integration |
 | [Stylus Annotations](https://github.com/kerivin/stylus-annotations.koplugin/releases) | Ink over EPUB/PDF pages | EPUB handwriting |
 | [Ink Away](https://github.com/EmirErtorer/ink-away.koplugin) | Notebook/PDF drawing and export | Optional PDF workflow |
@@ -19,6 +20,28 @@ From your own BookOrbit installation, configure the KOReader integration and dow
 
 Personalized packages can contain login credentials: never put them in Git, a shared release, or an issue attachment. For a two-device test, download the same book through the integration, sync after reading, and compare the paragraph on the other device rather than page numbers.
 
+## Kindle Fetch → automatic BookOrbit uploads
+
+[Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) **0.9.0** searches Z-Library, downloads a selected book to the reader, and can then upload the completed local file automatically into a chosen BookOrbit library. The original stays on the reader. Install it separately using its [installation guide](https://github.com/seshakiran/kindlefetch.koplugin#install); this deployment kit does not bundle a personalized plugin or books.
+
+On the reader, open **Kindle Fetch → Settings → BookOrbit uploads**. Sign in with the **BookOrbit website username and password**, choose a destination book library, and leave **Upload after download: On**. The server address is filled from the installed BookOrbit companion when available. Its sync username/key are separate credentials and do not authorize file uploads. **Send an existing book** handles files already on the reader.
+
+### Tailscale settings confirmed on the original reader
+
+The user confirmed a new download appeared automatically in BookOrbit on **October 20, 2026**, using a **Viwoods AiPaper Mini** with:
+
+- Tailscale connected on the reader and server throughout the download/upload.
+- Reader **Exit node: None**.
+- Reader **Use Tailscale DNS: Off**, where available.
+- Kindle Fetch **Encrypted DNS: On**.
+- A signed-in BookOrbit upload account, selected library, and automatic uploads enabled.
+
+Before this adjustment, Z-Library worked with Tailscale off while BookOrbit needed it on. After the adjustment, the user reported the complete flow working without toggling the VPN or manually sending the book. Keep KOReader included in Tailscale: excluding the application also excludes the BookOrbit client running inside it. The tested BookOrbit URL used a numeric tailnet address; if you use a hostname, verify resolution before disabling Tailscale DNS. See Tailscale's [exit nodes](https://tailscale.com/docs/features/exit-nodes), [DNS preferences](https://tailscale.com/docs/features/client/manage-preferences), and [Android split tunneling](https://tailscale.com/docs/features/client/android-app-split-tunneling).
+
+This is the confirmed setup for the original installation, not a universal network requirement. The plugin does not control the VPN. If BookOrbit is unreachable, local downloads remain usable. Safe preflight failures retry up to three times; restore connectivity and choose **Retry waiting/failed uploads** afterward. Interrupted file uploads require checking the website before an explicit retry because the server may already have received them.
+
+Sessions and the upload queue live in the reader's private `kindlefetch_bookorbit.json` settings file. Never publish it. Native upload sessions refresh without storing the password. The server's confirmed book ID marks a file as sent; asynchronous metadata work may still be running. See the plugin's [integration notes](https://github.com/seshakiran/kindlefetch.koplugin/blob/main/docs/BOOKORBIT_ROADMAP.md) and this stack's [validation status](VALIDATION.md).
+
 ## Android folder layout
 
 Locate the existing KOReader data directory; on many Android installations it is `Internal Storage/koreader`. Storage permissions and installation paths vary. Use the directory that already holds your working plugins.
@@ -27,6 +50,7 @@ Locate the existing KOReader data directory; on many Android installations it is
 koreader/
 ├── plugins/
 │   ├── bookorbit.koplugin/main.lua
+│   ├── kindlefetch.koplugin/main.lua
 │   ├── stylus-annotations.koplugin/main.lua
 │   └── ink-away.koplugin/main.lua
 └── fonts/
