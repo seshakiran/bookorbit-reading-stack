@@ -31,4 +31,4 @@ The optional studio uses MLX Audio, Qwen3-TTS models, faster-whisper, FFmpeg, Nu
 
 ## BookOrbit reader search patch
 
-`patches/bookorbit-kindlefetch-search.patch` modifies the BookOrbit **1.5.5** reader catalog from pinned source revision `c0759ea1bf6bd591f40ee0f82e7f109e480ef264`. It retains the upstream project's AGPL terms; see [patches/LICENSE](patches/LICENSE). The patch exposes a local search-text handoff to the separately installed [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) plugin. Neither complete upstream sources nor personalized plugin credentials are bundled here.
+`patches/bookorbit-kindlefetch-search.patch` and `patches/bookorbit-kindlefetch-import-upgrade.patch` modify the BookOrbit **1.5.5** reader catalog from pinned source revision `c0759ea1bf6bd591f40ee0f82e7f109e480ef264`. It retains the upstream project's AGPL terms; see [patches/LICENSE](patches/LICENSE). The patches expose a local search/import handoff to the separately installed [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) plugin. Neither complete upstream sources nor personalized plugin credentials are bundled here.

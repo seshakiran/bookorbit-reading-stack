@@ -44,32 +44,34 @@ Sessions and the upload queue live in the reader's private `kindlefetch_bookorbi
 
 ## Search Z-Library from the BookOrbit dashboard
 
-An optional reader patch adds **Search Z-Library** to BookOrbit's search dialog while retaining **Search library** and recent library searches. It requires **Kindle Fetch 0.9.1+** and the reviewed **BookOrbit reader plugin 1.5.5**, from the BookOrbit revision pinned in `native/versions.json`.
+The optional reader patch adds **Search Z-Library** beside **Search library** and its recent searches. It requires **Kindle Fetch 0.10.0+** and the reviewed **BookOrbit reader plugin 1.5.5**, from the source revision pinned in `native/versions.json`.
 
-1. Install or update [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin#install) on the reader.
-2. Copy your `bookorbit.koplugin` directory to the computer and keep a backup. From this deployment repository, apply the patch to the copied directory:
+1. Install/update [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin#install).
+2. Copy `bookorbit.koplugin` to the computer and keep a backup. From this deployment repository:
 
    ```sh
    python3 scripts/apply_reader_search.py /path/to/bookorbit.koplugin
    ```
 
-3. Copy the patched `bookorbit_catalog.lua` back into the reader's existing `bookorbit.koplugin` directory, then fully restart KOReader.
-4. Open the BookOrbit dashboard, tap its search icon, enter a title or author, and choose **Search Z-Library**. Download from the Kindle Fetch results; its existing automatic-upload setting sends the completed file to BookOrbit.
+3. Copy the patched `bookorbit_catalog.lua` back into the existing reader plugin folder and fully restart KOReader. The helper supports the original reviewed catalog and the earlier search-only patch; other modifications are refused.
+4. In **BookOrbit → Search**, enter a title/author, choose **Search Z-Library**, select a result, and choose **Import into BookOrbit**.
 
-**Search library** remains the default keyboard action and retains BookOrbit scope filters. Z-Library search uses Kindle Fetch's configured language/format filters and login. Closing the Kindle Fetch search returns to the catalog underneath. Refresh BookOrbit to reload its library after an upload if the catalog is showing cached results.
+### Import first, then open
 
-The handoff contains only the search text and runs within KOReader. Neither plugin sends its login credentials to the other service. If Kindle Fetch is missing or disabled, the external search button is disabled. This is a reader integration; BookOrbit's browser/web search is unchanged.
+The BookOrbit route stages the file on the reader, uploads it to the selected BookOrbit library, waits for the confirmed server book ID, links the local copy to the imported book/file IDs, and opens it. There is no ordinary local-download/folder prompt or Read-before-upload action. Later Open/Continue taps use that linked copy instead of requesting a second download. Selecting the same pending/completed result reuses its job.
 
-The patch helper verifies the exact original catalog hash, recognizes an already-patched file, and refuses unknown or modified versions. It touches no settings or personalized provision files. Future BookOrbit plugin updates may replace the catalog file: keep your backup and reapply only when the helper accepts the version. Applying this to the pinned BookOrbit source checkout is also supported, but rebuilding/redeploying server-generated plugin packages is a separate deployment step.
+The staging file remains in `kindlefetch-imports` in KOReader's data directory for local reading and recovery. Deleting that copy can require a later real download. The server receives a normal authenticated file upload; it does not fetch Z-Library URLs directly. Uncertain or failed jobs are retained for review; no second upload/download is silently attempted. After a restart, revisit a completed result to finish linking/opening if its original callback was interrupted.
 
-Local checks:
+Standalone Kindle Fetch keeps its regular local-download route and existing automatic-upload setting. Explicit BookOrbit imports work even if standalone auto-upload is off. The dashboard server and upload destination must match. **Search library** remains the default keyboard action and retains BookOrbit scope filters. The new import action is disabled if a compatible Kindle Fetch handoff is missing. This modifies the KOReader dashboard, not the browser/web search.
+
+The helper verifies original/previous-patch hashes, is idempotent, and touches no settings or provision files. A future upstream update can replace the catalog; reapply only to supported versions. Applying to the pinned source checkout is also supported; rebuilding server-generated plugin packages is a separate deployment step.
 
 ```sh
-# Requires Lua 5.1; downloads only the pinned public catalog source into a temporary folder.
+# Lua 5.1; downloads only the pinned public catalog into a temporary directory.
 python3 scripts/check_reader_search.py
 ```
 
-The patch is derived from BookOrbit and is covered by [the upstream AGPL license](../patches/LICENSE). Kindle Fetch retains its own license. See [validation](VALIDATION.md) for automated and device-test scope.
+The patch follows [BookOrbit's AGPL license](../patches/LICENSE); Kindle Fetch retains its own license. See [validation](VALIDATION.md).
 
 ## Android folder layout
 

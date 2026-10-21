@@ -1,0 +1,83 @@
+--- a/bookorbit_catalog.lua
++++ b/bookorbit_catalog.lua
+@@ -1240,20 +1240,24 @@
+             {
+                 {
+                     text = _("Search Z-Library"),
+-                    enabled = type(shared.kindlefetch_search) == "function",
++                    enabled = type(shared.kindlefetch_search) == "function" and shared.kindlefetch_import_api == 1,
+                     callback = function()
+                         local q = util.trim(dialog:getInputText() or "")
+                         if q == "" then return end
+                         local search = shared.kindlefetch_search
+-                        if type(search) ~= "function" then
++                        if type(search) ~= "function" or shared.kindlefetch_import_api ~= 1 then
+                             UIManager:show(InfoMessage:new{
+-                                text = _("Enable Kindle Fetch 0.9.1 or later and restart KOReader to search Z-Library."),
++                                text = _("Enable Kindle Fetch 0.10.0 or later and restart KOReader to search Z-Library."),
+                             })
+                             return
+                         end
+                         UIManager:close(dialog)
+                         -- Keep the catalog underneath so closing Kindle Fetch returns here.
+-                        local ok, opened = pcall(search, q)
++                        local ok, opened = pcall(search, q, {
++                            kind = "bookorbit",
++                            server_url = self.client.server_url,
++                            on_imported = function(job) self:acceptKindleFetchImport(job) end,
++                        })
+                         if not ok or not opened then
+                             UIManager:show(InfoMessage:new{
+                                 text = _("Could not open Z-Library search. Open Kindle Fetch from KOReader's menu and try again."),
+@@ -1266,6 +1270,51 @@
+     }
+     UIManager:show(dialog)
+     dialog:onShowKeyboard()
++end
++
++-- A BookOrbit search imports before opening. Reuse and link the bytes already fetched.
++function BookOrbitCatalog:acceptKindleFetchImport(job)
++    if type(job) ~= "table" or not tonumber(job.book_id) then return end
++    self:runConnected(function()
++        local detail, err = self:fetch(_("Opening imported BookOrbit book..."), function()
++            return self.client:catalogBook(job.book_id)
++        end)
++        if not detail then
++            self:showRetry(err, function() self:acceptKindleFetchImport(job) end)
++            return
++        end
++        self:cacheBookDetail(detail)
++        if not job.path or lfs.attributes(job.path, "mode") ~= "file" then
++            if not self.catalog_closed then self:showBookDetail(detail) end
++            return
++        end
++        local files = {}
++        for _, file in ipairs(self:supportedFiles(detail)) do
++            if string.lower(file.format or "") == string.lower(job.file_type or "") then
++                files[#files + 1] = file
++            end
++        end
++        if #files ~= 1 then
++            UIManager:show(InfoMessage:new{
++                text = _("Imported into BookOrbit, but the uploaded file could not be identified. The local copy is retained."),
++            })
++            return
++        end
++        local ok, digest = pcall(util.partialMD5, job.path)
++        if not ok or not digest then
++            UIManager:show(InfoMessage:new{ text = _("Imported into BookOrbit, but the local reading copy could not be linked.") })
++            return
++        end
++        -- The upload returned this book ID and its authenticated detail identifies the file.
++        -- Persist the association so later Open/Continue taps reuse this same local copy.
++        BookOrbitStateManager.linkFile(digest, files[1].id, detail.id, job.path)
++        self:refreshOnDevice()
++        self.on_device[detail.id] = job.path
++        self.on_device_files = self.on_device_files or {}
++        self.on_device_files[files[1].id] = job.path
++        if self.markStackDirty then self:markStackDirty() end
++        if not self.catalog_closed then self:openDownloadedFile(job.path) end
++    end)
+ end
+ 
+ function BookOrbitCatalog:filterSummary(query)
