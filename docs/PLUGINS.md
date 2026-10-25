@@ -119,6 +119,8 @@ Change fonts before adding handwriting: reflow can change where strokes appear.
 
 ## SimpleUI on the Viwoods Android reader
 
+**User-confirmed October 25, 2026:** SimpleUI 3.0.0 and the patched BookOrbit reader 2.0.0 work together on the originating Viwoods AiPaper Mini with Kindle Fetch 0.10.0. The home screen and Z-Library import/upload/open/reopen test succeeded without a second download prompt. See the [validation record](VALIDATION.md#reader-plugin-200-compatibility--october-25-2026).
+
 [SimpleUI 3.0.0](https://github.com/doctorhetfield-cmd/simpleui.koplugin/releases/tag/3.0.0) provides a configurable home screen, navigation bar and plugin quick actions. Upstream requires **KOReader 2026.03+** and the built-in **CoverBrowser** plugin enabled. Use the release asset `simpleui.koplugin.zip`, extract it, and copy the complete `simpleui.koplugin` folder beside BookOrbit and Kindle Fetch. Restart KOReader and finish SimpleUI's welcome screen. Configure BookOrbit/Kindle Fetch shortcuts using SimpleUI Quick Actions as desired; their menus remain separate from the home layout.
 
 Choose one main UI replacement. SimpleUI and ZenOS automatically disable conflicting UI plugins. [ZenOS](https://github.com/xZenLabs/zen-os) is an Android-capable alternative with broader menu and reader changes; [Burrow](https://github.com/richbeatty/burrow.koplugin) is a library/OPDS-focused public beta requiring KOReader 2026.07.1+ and CoverBrowser disabled. These are KOReader plugins, not replacements for the Viwoods firmware.

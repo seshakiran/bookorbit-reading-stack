@@ -124,6 +124,8 @@ Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) along
 
 ### Search and import directly from the reader dashboard
 
+**Confirmed working on the Viwoods AiPaper Mini — October 25, 2026:** after restarting KOReader, the user confirmed **“Both SimpleUI and import work.”** The tested setup is **SimpleUI 3.0.0 + BookOrbit reader plugin 2.0.0 with the Z-Library import patch + Kindle Fetch 0.10.0**. The test covered the SimpleUI home screen and a BookOrbit Z-Library import that uploads, opens, and reopens without a second download prompt. All **385 installed application files** had been read back and matched the prepared packages byte for byte.
+
 **Upgrade available:** BookOrbit v3.5.0 includes reader plugin **2.0.0**. The guarded helper now supports its redesigned search panel while retaining the Z-Library import flow. Install the complete new plugin folder when changing versions. See the [version and UI guide](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard).
 
 **Confirmed on the originating Viwoods AiPaper Mini on October 20, 2026:** imports upload and open successfully; reopening the book does **not** ask for another download. This was user-tested with Kindle Fetch **0.10.0** and the companion BookOrbit **1.5.5** catalog patch.
