@@ -1,0 +1,119 @@
+--- a/bookorbit_catalog.lua
++++ b/bookorbit_catalog.lua
+@@ -1276,19 +1276,53 @@
+ -- The search panel: the field, then recent searches, over the page.
+ function BookOrbitCatalog:promptSearch(params, scope_title, initial)
+     local TextEntry = require("bookorbit_text_entry")
++    local shared = require("pluginshare")
++    local MenuUI = require("bookorbit_menu_ui")
+     local recents = self.settings.catalog_recent_searches or {}
+     local scoped = scope_title and scope_title ~= ""
++    local function searchBelow()
++        local native = TextEntry.searchBelow(recents)
++        return function(page, w, max_h, has_text)
++            if not has_text then return native(page, w, max_h, has_text) end
++            local iw = MenuUI.rowsIn(w)
++            local rows = {
++                MenuUI.row(iw, { icon = "search", label = _("Search library"), sub = _("Or press Enter on the keyboard"), chevron = true, bold = true, action = { kind = "submit" } }),
++            }
++            if type(shared.kindlefetch_search) == "function" and shared.kindlefetch_import_api == 1 then
++                rows[#rows + 1] = MenuUI.row(iw, { icon = "download", label = _("Search Z-Library"), sub = _("Import into BookOrbit, then open"), chevron = true, action = { kind = "kindlefetch-import" } })
++            end
++            return { MenuUI.group(w, rows) }
++        end
++    end
+     TextEntry.open{
+         title = scoped and T(_("Search in %1"), scope_title) or _("Search BookOrbit"),
+         value = initial or "",
+         hint = _("Title, author, series or ISBN"),
+         icon = "search",
+-        below = TextEntry.searchBelow(recents),
++        below = searchBelow(),
+         on_submit = function(q)
+             self:runSearch(params, q, scope_title)
+         end,
+         on_action = function(page, action)
+-            if action.kind == "recent" then
++            if action.kind == "kindlefetch-import" then
++                local q = util.trim(page:entryText() or "")
++                if q == "" then return end
++                local search = shared.kindlefetch_search
++                if type(search) ~= "function" or shared.kindlefetch_import_api ~= 1 then
++                    UIManager:show(InfoMessage:new{ text = _("Enable Kindle Fetch 0.10.0 or later and restart KOReader to search Z-Library.") })
++                    return
++                end
++                page:close()
++                UIManager:tickAfterNext(function()
++                    local ok, opened = pcall(search, q, {
++                        kind = "bookorbit", server_url = self.client.server_url,
++                        on_imported = function(job) self:acceptKindleFetchImport(job) end,
++                    })
++                    if not ok or not opened then
++                        UIManager:show(InfoMessage:new{ text = _("Could not open Z-Library search. Open Kindle Fetch from KOReader's menu and try again.") })
++                    end
++                end)
++            elseif action.kind == "recent" then
+                 local q = recents[action.index]
+                 if not q then return end
+                 page:close()
+@@ -1296,12 +1330,59 @@
+             elseif action.kind == "clear-recents" then
+                 recents = {}
+                 self:persistSetting("catalog_recent_searches", recents)
+-                page.opts.below = TextEntry.searchBelow(recents)
++                page.opts.below = searchBelow()
+                 page:refresh()
+             end
+         end,
+     }
+ end
++
++-- A BookOrbit search imports before opening. Reuse and link the bytes already fetched.
++function BookOrbitCatalog:acceptKindleFetchImport(job)
++    if type(job) ~= "table" or not tonumber(job.book_id) then return end
++    self:runConnected(function()
++        local detail, err = self:fetch(_("Opening imported BookOrbit book..."), function()
++            return self.client:catalogBook(job.book_id)
++        end)
++        if not detail then
++            self:showRetry(err, function() self:acceptKindleFetchImport(job) end)
++            return
++        end
++        self:cacheBookDetail(detail)
++        if not job.path or lfs.attributes(job.path, "mode") ~= "file" then
++            if not self.catalog_closed then self:showBookDetail(detail) end
++            return
++        end
++        local files = {}
++        for _, file in ipairs(self:supportedFiles(detail)) do
++            if string.lower(file.format or "") == string.lower(job.file_type or "") then
++                files[#files + 1] = file
++            end
++        end
++        if #files ~= 1 then
++            UIManager:show(InfoMessage:new{
++                text = _("Imported into BookOrbit, but the uploaded file could not be identified. The local copy is retained."),
++            })
++            return
++        end
++        local ok, digest = pcall(util.partialMD5, job.path)
++        if not ok or not digest then
++            UIManager:show(InfoMessage:new{ text = _("Imported into BookOrbit, but the local reading copy could not be linked.") })
++            return
++        end
++        -- The upload returned this book ID and its authenticated detail identifies the file.
++        -- Persist the association so later Open/Continue taps reuse this same local copy.
++        BookOrbitStateManager.linkFile(digest, files[1].id, detail.id, job.path)
++        self:refreshOnDevice()
++        self.on_device = self.on_device or {}
++        self.on_device[detail.id] = job.path
++        self.on_device_files = self.on_device_files or {}
++        self.on_device_files[files[1].id] = job.path
++        if self.markStackDirty then self:markStackDirty() end
++        if not self.catalog_closed then self:openDownloadedFile(job.path) end
++    end)
++end
++
+ 
+ function BookOrbitCatalog:filterSummary(query)
+     local parts = {}

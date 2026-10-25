@@ -44,7 +44,12 @@ Sessions and the upload queue live in the reader's private `kindlefetch_bookorbi
 
 ## Search Z-Library from the BookOrbit dashboard
 
-The optional reader patch adds **Search Z-Library** beside **Search library** and its recent searches. It requires **Kindle Fetch 0.10.0+** and the reviewed **BookOrbit reader plugin 1.5.5**, from the source revision pinned in `native/versions.json`.
+The optional reader patch adds **Search Z-Library** beside **Search library** and its recent searches. It requires **Kindle Fetch 0.10.0+** and one of the reviewed reader catalogs below. The reader plugin and server have separate versions.
+
+| Reader plugin | Reviewed source | Search UI |
+|---|---|---|
+| **2.0.0** | BookOrbit **v3.5.0**, revision `c59dd0118fd0d5d0ecbd716d1d7fde2c97f8e2ea` | Native search panel; type a query to reveal Search library and Search Z-Library |
+| **1.5.5** | Revision pinned in `native/versions.json` | Original search dialog; the previous search-only patch can also be upgraded |
 
 1. Install/update [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin#install).
 2. Copy `bookorbit.koplugin` to the computer and keep a backup. From this deployment repository:
@@ -53,7 +58,7 @@ The optional reader patch adds **Search Z-Library** beside **Search library** an
    python3 scripts/apply_reader_search.py /path/to/bookorbit.koplugin
    ```
 
-3. Copy the patched `bookorbit_catalog.lua` back into the existing reader plugin folder and fully restart KOReader. The helper supports the original reviewed catalog and the earlier search-only patch; other modifications are refused.
+3. When upgrading the plugin version, install the **complete new `bookorbit.koplugin` folder** with the patched catalog: 2.0.0 needs new modules that 1.5.5 does not contain. For an already matching version, only the patched catalog needs replacing. Preserve the existing private settings and keep a rollback copy. Fully restart KOReader. The helper accepts the reviewed source hashes and previous 1.5.5 search-only patch; other modifications are refused.
 4. In **BookOrbit → Search**, enter a title/author, choose **Search Z-Library**, select a result, and choose **Import into BookOrbit**.
 
 ### Import first, then open
@@ -64,10 +69,10 @@ The staging file remains in `kindlefetch-imports` in KOReader's data directory f
 
 Standalone Kindle Fetch keeps its regular local-download route and existing automatic-upload setting. Explicit BookOrbit imports work even if standalone auto-upload is off. The dashboard server and upload destination must match. **Search library** remains the default keyboard action and retains BookOrbit scope filters. The new import action is disabled if a compatible Kindle Fetch handoff is missing. This modifies the KOReader dashboard, not the browser/web search.
 
-The helper verifies original/previous-patch hashes, is idempotent, and touches no settings or provision files. A future upstream update can replace the catalog; reapply only to supported versions. Applying to the pinned source checkout is also supported; rebuilding server-generated plugin packages is a separate deployment step.
+The helper verifies exact original/previous-patch hashes for each supported version, is idempotent, and touches no settings or provision files. A future upstream update can replace the catalog; reapply only to supported versions. Applying to the pinned source checkout is also supported; rebuilding server-generated plugin packages is a separate deployment step.
 
 ```sh
-# Lua 5.1; downloads only the pinned public catalog into a temporary directory.
+# Lua 5.1; downloads the two reviewed public catalogs into temporary directories.
 python3 scripts/check_reader_search.py
 ```
 
@@ -110,3 +115,12 @@ Amazon provides a font collection on its [official typography page](https://deve
 Copy the extracted Bookerly `.ttf` files into `koreader/fonts/` (create that folder if absent), restart KOReader, then choose Bookerly under **Font face**. If the EPUB's font overrides your choice, turn off **Embedded fonts**; changing embedded styles can also change layout. See the [KOReader user guide](https://koreader.rocks/user_guide/).
 
 Change fonts before adding handwriting: reflow can change where strokes appear.
+
+
+## SimpleUI on the Viwoods Android reader
+
+[SimpleUI 3.0.0](https://github.com/doctorhetfield-cmd/simpleui.koplugin/releases/tag/3.0.0) provides a configurable home screen, navigation bar and plugin quick actions. Upstream requires **KOReader 2026.03+** and the built-in **CoverBrowser** plugin enabled. Use the release asset `simpleui.koplugin.zip`, extract it, and copy the complete `simpleui.koplugin` folder beside BookOrbit and Kindle Fetch. Restart KOReader and finish SimpleUI's welcome screen. Configure BookOrbit/Kindle Fetch shortcuts using SimpleUI Quick Actions as desired; their menus remain separate from the home layout.
+
+Choose one main UI replacement. SimpleUI and ZenOS automatically disable conflicting UI plugins. [ZenOS](https://github.com/xZenLabs/zen-os) is an Android-capable alternative with broader menu and reader changes; [Burrow](https://github.com/richbeatty/burrow.koplugin) is a library/OPDS-focused public beta requiring KOReader 2026.07.1+ and CoverBrowser disabled. These are KOReader plugins, not replacements for the Viwoods firmware.
+
+The BookOrbit import patch does not depend on SimpleUI. Preserve reader settings and the old plugins before changing either. A stock BookOrbit plugin update can replace the custom search catalog; use the guarded helper only with a supported plugin version. Updating the reader plugin does not update the BookOrbit server or its custom audiobook patches.

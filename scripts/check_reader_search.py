@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from urllib.request import urlopen
 
-from apply_reader_search import BASE_SHA256, PATCHED_SHA256, PREVIOUS_SHA256, apply
+from apply_reader_search import BASE_SHA256, PATCHED_SHA256, PREVIOUS_SHA256, V2_BASE_SHA256, V2_PATCHED_SHA256, apply
 
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = 'https://raw.githubusercontent.com/bookorbit/bookorbit/c0759ea1bf6bd591f40ee0f82e7f109e480ef264/koreader-plugin/bookorbit.koplugin/bookorbit_catalog.lua'
@@ -43,3 +43,26 @@ with tempfile.TemporaryDirectory(prefix='bookorbit-reader-search-') as tmp:
         raise AssertionError('Modified upstream source was not rejected')
     assert catalog.read_bytes() == original + b'\n-- another local modification\n'
 print('PASS: reader patch applies to reviewed upstream, is idempotent, and refuses unknown versions')
+
+# The released 2.0.0 plugin uses a native text-entry panel instead of InputDialog.
+V2_UPSTREAM = 'https://raw.githubusercontent.com/bookorbit/bookorbit/c59dd0118fd0d5d0ecbd716d1d7fde2c97f8e2ea/koreader-plugin/bookorbit.koplugin/bookorbit_catalog.lua'
+with urlopen(V2_UPSTREAM, timeout=30) as response:
+    v2_original = response.read()
+assert hashlib.sha256(v2_original).hexdigest() == V2_BASE_SHA256
+with tempfile.TemporaryDirectory(prefix='bookorbit-reader-v2-') as tmp:
+    catalog = Path(tmp) / 'bookorbit_catalog.lua'
+    catalog.write_bytes(v2_original)
+    apply(Path(tmp))
+    patched = catalog.read_bytes()
+    assert hashlib.sha256(patched).hexdigest() == V2_PATCHED_SHA256
+    apply(Path(tmp))
+    assert catalog.read_bytes() == patched
+    subprocess.run([args.lua, str(ROOT / 'scripts/test_reader_search_v2.lua'), str(catalog)], check=True)
+    catalog.write_bytes(v2_original + b'\n-- another local modification\n')
+    try:
+        apply(Path(tmp))
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError('Modified 2.0 source was not rejected')
+print('PASS: plugin 2.0.0 patch applies, is idempotent, and refuses modified source')

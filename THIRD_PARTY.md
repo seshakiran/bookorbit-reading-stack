@@ -32,3 +32,5 @@ The optional studio uses MLX Audio, Qwen3-TTS models, faster-whisper, FFmpeg, Nu
 ## BookOrbit reader search patch
 
 `patches/bookorbit-kindlefetch-search.patch` and `patches/bookorbit-kindlefetch-import-upgrade.patch` modify the BookOrbit **1.5.5** reader catalog from pinned source revision `c0759ea1bf6bd591f40ee0f82e7f109e480ef264`. It retains the upstream project's AGPL terms; see [patches/LICENSE](patches/LICENSE). The patches expose a local search/import handoff to the separately installed [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) plugin. Neither complete upstream sources nor personalized plugin credentials are bundled here.
+
+`patches/bookorbit-kindlefetch-search-v2.patch` modifies the BookOrbit **2.0.0** reader catalog from release **v3.5.0**, revision `c59dd0118fd0d5d0ecbd716d1d7fde2c97f8e2ea`, under the same AGPL terms. It ports the import handoff to the new native search panel without distributing private configuration. SimpleUI is a separately installed upstream plugin under its own license.

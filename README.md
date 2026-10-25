@@ -124,9 +124,11 @@ Install [Kindle Fetch](https://github.com/seshakiran/kindlefetch.koplugin) along
 
 ### Search and import directly from the reader dashboard
 
+**Upgrade available:** BookOrbit v3.5.0 includes reader plugin **2.0.0**. The guarded helper now supports its redesigned search panel while retaining the Z-Library import flow. Install the complete new plugin folder when changing versions. See the [version and UI guide](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard).
+
 **Confirmed on the originating Viwoods AiPaper Mini on October 20, 2026:** imports upload and open successfully; reopening the book does **not** ask for another download. This was user-tested with Kindle Fetch **0.10.0** and the companion BookOrbit **1.5.5** catalog patch.
 
-With Kindle Fetch **0.10.0+** and the updated BookOrbit **1.5.5** reader patch, open **BookOrbit → Search → Search Z-Library**, select a result, and choose **Import into BookOrbit**. The reader stages the file, uploads it, confirms the server book ID, links the local reading copy, and opens that copy. Later Open/Continue actions reuse it instead of asking for another download. Completed/pending imports are reused.
+With Kindle Fetch **0.10.0+** and the updated BookOrbit **2.0.0** reader patch (the reviewed **1.5.5** patch is also supported), open **BookOrbit → Search → Search Z-Library**, select a result, and choose **Import into BookOrbit**. The reader stages the file, uploads it, confirms the server book ID, links the local reading copy, and opens that copy. Later Open/Continue actions reuse it instead of asking for another download. Completed/pending imports are reused.
 
 | Where you search | Download and upload behavior | Opening the book |
 |---|---|---|
@@ -134,6 +136,10 @@ With Kindle Fetch **0.10.0+** and the updated BookOrbit **1.5.5** reader patch, 
 | **Standalone Kindle Fetch** | Save locally; automatically upload only according to the existing setting | Keeps the regular local reading flow |
 
 Standalone Kindle Fetch retains its regular local-download flow and existing auto-upload setting. The dashboard integration imports explicitly even when standalone auto-upload is off. Update both plugins and restart KOReader; the [guarded patch helper](docs/PLUGINS.md#search-z-library-from-the-bookorbit-dashboard) can upgrade the previous search-only patch. This changes the reader dashboard, not web search. See the [validation status](docs/VALIDATION.md) for automated versus physical-device checks.
+
+### Optional reader home screen
+
+[SimpleUI 3.0.0](https://github.com/doctorhetfield-cmd/simpleui.koplugin/releases/tag/3.0.0) adds a configurable home screen and plugin shortcuts on Android readers. It requires KOReader 2026.03+ and CoverBrowser enabled. See the [Viwoods UI guide](docs/PLUGINS.md#simpleui-on-the-viwoods-android-reader) for setup and alternatives. The Z-Library import integration works independently of the chosen home screen.
 
 ## 🍎 Mac quick start
 

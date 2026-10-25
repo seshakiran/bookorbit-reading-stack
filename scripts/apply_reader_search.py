@@ -2,7 +2,7 @@
 """Apply the optional Kindle Fetch search bridge to BookOrbit's reader plugin.
 
 Accept a bookorbit.koplugin directory or the pinned BookOrbit source checkout.
-Only the reviewed 1.5.5 catalog file is supported; settings are never touched.
+Reviewed 1.5.5 and 2.0.0 catalog files are supported; settings are never touched.
 """
 import argparse
 import hashlib
@@ -15,6 +15,9 @@ BASE_SHA256 = 'c15250c6481652334b81d780fc49d40346260555cb036df25e92822a8a4661c4'
 PREVIOUS_SHA256 = '2849b9b3c78ca3f8f3e08aab1eb69f6a5b9962fdb493bca49a4d33d524d05509'
 PATCHED_SHA256 = 'dc3e2b0dbbf0c61cd6867c7b261b5f425db1293fbc07c12fff6fbb444dca5193'
 
+V2_BASE_SHA256 = '49852700f7e946c169b202782471624c0ae1946744b5a5b24588e9dbab4bd986'
+V2_PATCHED_SHA256 = 'cd63083c55c6823e9afbdf1649915263ee069486a88438583e798f1d2acfa54e'
+
 
 def apply(source: Path):
     source = source.resolve()
@@ -23,17 +26,20 @@ def apply(source: Path):
     if not catalog.is_file():
         raise SystemExit('BookOrbit reader plugin not found at this path.')
     digest = hashlib.sha256(catalog.read_bytes()).hexdigest()
-    if digest == PATCHED_SHA256:
+    if digest in (PATCHED_SHA256, V2_PATCHED_SHA256):
         print('Reader search bridge already applied.')
         return
-    if digest not in (BASE_SHA256, PREVIOUS_SHA256):
-        raise SystemExit('Unsupported or modified catalog. This patch requires the reviewed BookOrbit plugin 1.5.5; preserve your current files.')
+    if digest not in (BASE_SHA256, PREVIOUS_SHA256, V2_BASE_SHA256):
+        raise SystemExit('Unsupported or modified catalog. This patch requires a reviewed BookOrbit plugin 1.5.5 or 2.0.0; preserve your current files.')
     patch_name = 'bookorbit-kindlefetch-import-upgrade.patch' if digest == PREVIOUS_SHA256 else 'bookorbit-kindlefetch-search.patch'
+    if digest == V2_BASE_SHA256:
+        patch_name = 'bookorbit-kindlefetch-search-v2.patch'
+    expected = V2_PATCHED_SHA256 if digest == V2_BASE_SHA256 else PATCHED_SHA256
     patch = ROOT / 'patches' / patch_name
     command = ['git', 'apply']
     subprocess.run(command + ['--check', str(patch)], cwd=plugin, check=True)
     subprocess.run(command + [str(patch)], cwd=plugin, check=True)
-    if hashlib.sha256(catalog.read_bytes()).hexdigest() != PATCHED_SHA256:
+    if hashlib.sha256(catalog.read_bytes()).hexdigest() != expected:
         raise SystemExit('Unexpected patched file hash; do not deploy it.')
     print('Reader search bridge applied. Install Kindle Fetch 0.10.0+ and restart KOReader.')
 
